@@ -1,3 +1,5 @@
+package tw.edu.ncku.alphatraining;
+
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
@@ -11,11 +13,8 @@ import java.util.UUID;
 
 import tw.edu.ncku.androidlibrary.BleManager;
 
-/**
- * Created by john on 11/4/15.
- */
 public class AdcManager extends BleManager {
-    private static final UUID ADC_SERVICE_UUID = UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb");
+    public static final UUID ADC_SERVICE_UUID = UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb");
     private static final UUID SAMPLE_PERIOD_UUID = UUID.fromString("0000fff1-0000-1000-8000-00805f9b34fb");
     private static final UUID REALTIME_DATA_UUID = UUID.fromString("0000fff4-0000-1000-8000-00805f9b34fb");
     private static final UUID BUFFERED_DATA_UUID = UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb");
