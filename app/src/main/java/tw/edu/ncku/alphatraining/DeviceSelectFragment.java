@@ -87,8 +87,10 @@ public class DeviceSelectFragment extends Fragment{
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (view == null)
                     return;
-                if (device != deviceArrayAdapter.getItem(position))
-                    setDevice(deviceArrayAdapter.getItem(position));
+                if (device != deviceArrayAdapter.getItem(position)) {
+                    device = deviceArrayAdapter.getItem(position);
+                    btSelectBtn.setEnabled(device != null);
+                }
             }
 
             @Override
@@ -179,11 +181,6 @@ public class DeviceSelectFragment extends Fragment{
         btSelectBtn.setEnabled(false);
         if(mBluetoothAdapter.isEnabled())
             mBluetoothAdapter.getBluetoothLeScanner().startScan(filters, new ScanSettings.Builder().build(), scanCb);
-    }
-
-    private void setDevice(BluetoothDevice bluetoothDevice){
-        device = bluetoothDevice;
-        btSelectBtn.setEnabled(device != null);
     }
 
     public interface OnDeviceSelectedListener {
