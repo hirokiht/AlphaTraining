@@ -28,6 +28,7 @@ public class AdcManager extends BleManager {
     private AdcListener adcListener;
 
     public interface AdcListener{
+        void onConnectionStateChange(int newState);
         void onSamplingPeriodChanged(short sampling_period);
         void onDataReceived(short data);
         void onDataBufferReceived(byte[] buffer);
@@ -54,6 +55,7 @@ public class AdcManager extends BleManager {
                     samplingPeriodChar = realtimeDataChar = bufferedDataChar = byteBufferChar = null;
                     samplingPeriod = -1;
                 }
+                adcListener.onConnectionStateChange(newState);
             }
 
             @Override

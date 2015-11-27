@@ -13,4 +13,5 @@
     <string name="select_device">Select device to connect.</string>
     <string name="turn_on_bt">Turn On Bluetooth</string>
     <string name="select_bt">Confirm</string>
+    <string name="getBaseline">Acquire Baseline</string>
 </resources>
