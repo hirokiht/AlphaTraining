@@ -60,6 +60,7 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
             throw new RuntimeException(context.toString()
                     + " must implement OnInitFragmentInteractionListener");
         }
+        ((MainActivity)getActivity()).toolbar.setTitle(R.string.getBaseline);
     }
 
     @Override

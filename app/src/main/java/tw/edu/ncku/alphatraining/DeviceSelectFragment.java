@@ -38,7 +38,6 @@ import java.util.List;
  */
 public class DeviceSelectFragment extends Fragment{
     final private static BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-    private TextView deviceSelectTextView;
     private Switch btSwitch;
     private Spinner deviceSpinner;
     private Button btSelectBtn;
@@ -71,7 +70,6 @@ public class DeviceSelectFragment extends Fragment{
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_device_select, container, false);
-        deviceSelectTextView = (TextView) view.findViewById(R.id.deviceSelectTextView);
         btSwitch = (Switch) view.findViewById(R.id.btSwitch);
         deviceSpinner = (Spinner) view.findViewById(R.id.deviceSpinner);
         btSelectBtn = (Button) view.findViewById(R.id.btSelectBtn);
@@ -159,7 +157,7 @@ public class DeviceSelectFragment extends Fragment{
                         }
             }).create().show();
         }else if(!mBluetoothAdapter.isEnabled()){
-            deviceSelectTextView.setText(R.string.require_bt);
+            ((MainActivity)getActivity()).toolbar.setTitle(R.string.require_bt);
             btSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -174,7 +172,7 @@ public class DeviceSelectFragment extends Fragment{
     }
 
     private void startDeviceSelect(){
-        deviceSelectTextView.setText(R.string.select_device);
+        ((MainActivity)getActivity()).toolbar.setTitle(R.string.select_device);
         btSwitch.setVisibility(View.GONE);
         deviceSpinner.setVisibility(View.VISIBLE);
         btSelectBtn.setVisibility(View.VISIBLE);

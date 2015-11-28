@@ -4,13 +4,6 @@
     android:layout_height="match_parent"
     tools:context="tw.edu.ncku.alphatraining.DeviceSelectFragment">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:id="@+id/deviceSelectTextView"
-        android:layout_gravity="center_horizontal|top" />
-
     <Switch
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -25,9 +18,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/deviceSpinner"
-        android:paddingTop="@dimen/activity_vertical_margin"
         android:visibility="gone"
-        android:layout_below="@+id/deviceSelectTextView"
         android:layout_alignParentStart="true" />
 
     <Button

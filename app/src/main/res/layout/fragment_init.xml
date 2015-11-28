@@ -1,42 +1,47 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context="tw.edu.ncku.alphatraining.InitFragment">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="@string/getBaseline"
-        android:layout_gravity="center_horizontal|top" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="100sp"
-        android:id="@+id/timeText"
-        android:visibility="visible"
-        android:layout_gravity="center" />
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:indeterminate="false"
-        android:rotation="-90"
-        android:max="30"
-        android:progress="30"
-        android:progressDrawable="@drawable/circular_progress_bar"
-        android:layout_gravity="center" />
+        android:layout_height="0dp"
+        android:layout_weight="2" >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="100sp"
+            android:id="@+id/timeText"
+            android:visibility="visible"
+            android:layout_centerInParent="true"/>
 
-    <ToggleButton
+        <ToggleButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/theButton"
+            android:textOff="@string/start"
+            android:textOn="@string/reset"
+            android:layout_below="@id/timeText"
+            android:layout_centerHorizontal="true"/>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:indeterminate="false"
+            android:rotation="-90"
+            android:max="30"
+            android:progress="30"
+            android:progressDrawable="@drawable/circular_progress_bar"
+            android:layout_centerInParent="true" />
+    </RelativeLayout>
+
+    <com.jjoe64.graphview.GraphView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/theButton"
-        android:textOff="@string/start"
-        android:textOn="@string/reset"
-        android:layout_gravity="center_horizontal|bottom" />
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
-</FrameLayout>
+</LinearLayout>
