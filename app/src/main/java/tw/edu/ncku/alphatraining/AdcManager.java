@@ -85,6 +85,9 @@ public class AdcManager extends BleManager {
                 else if(characteristic == bufferedDataChar && buffer.capacity() == 16) {
                     short[] array = new short[8];
                     buffer.order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(array);
+                    for(int i = 0 ; i < array.length ; i++)
+                        if((array[i]&0x800) > 0)
+                            array[i] |= 0xF000;
                     adcListener.onDataBufferReceived(array);
                 }else if(characteristic == byteBufferChar && buffer.capacity() == 16)
                     adcListener.onDataBufferReceived(buffer.array());
