@@ -5,6 +5,7 @@ import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,12 +17,21 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
+
 public class InitFragment extends Fragment implements CompoundButton.OnCheckedChangeListener{
     private ToneGenerator toneGenerator = new ToneGenerator(AudioManager.STREAM_NOTIFICATION,ToneGenerator.MAX_VOLUME);
     private ToggleButton theButton = null;
     private TextView timeText = null;
     private ProgressBar timeProgress = null;
     private CountDownTimer timer;
+    private GraphView graphView;
+    private final Handler handler = new Handler();
+    private Runnable task;
+    private LineGraphSeries<DataPoint> rawDataSeries = new LineGraphSeries<>();
+    private static final int rawDataWindowSize =10 * 1000 / MainActivity.SAMPLING_PERIOD;
 
     private final static int countDownSeconds = 120;
 
@@ -48,7 +58,17 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
         timeProgress.setProgress(countDownSeconds);
         timeText.setText(Integer.toString(countDownSeconds));
         theButton.setOnCheckedChangeListener(this);
+        graphView = (GraphView) view.findViewById(R.id.rawDataGraph);
+        graphView.addSeries(rawDataSeries);
+        graphView.getViewport().setXAxisBoundsManual(true);
+        graphView.getGridLabelRenderer().setPadding(32);
         return view;
+    }
+
+    @Override
+    public void onPause(){
+        handler.removeCallbacks(task);
+        super.onPause();
     }
 
     @Override
@@ -105,6 +125,40 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
             timeProgress.setProgress(timeProgress.getMax());
             timeText.setText(Integer.toString(timeProgress.getMax()));
         }
+    }
+
+    public void appendRawData(final float datum){
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                rawDataSeries.appendData(new DataPoint(rawDataSeries.isEmpty() ? 0f :
+                        rawDataSeries.getHighestValueX() + 0.5f, datum*100), true, rawDataWindowSize);
+                graphView.getViewport().setMinX(rawDataSeries.getLowestValueX());
+                graphView.getViewport().setMaxX(rawDataSeries.getHighestValueX());
+            }
+        });
+    }
+
+    public void appendRawData(final float[] data){
+        handler.post(task = new Runnable() {
+            @Override
+            public void run() {
+                for(final double datum : data)
+                    rawDataSeries.appendData(new DataPoint(rawDataSeries.isEmpty() ? 0f :
+                        rawDataSeries.getHighestValueX() + 0.5f, datum*100), true, rawDataWindowSize);
+                graphView.getViewport().setMinX(rawDataSeries.getLowestValueX());
+                graphView.getViewport().setMaxX(rawDataSeries.getHighestValueX());
+            }
+        });
+    }
+
+    public void resetRawData(){
+        handler.post(task = new Runnable() {
+            @Override
+            public void run() {
+                rawDataSeries.resetData(new DataPoint[]{new DataPoint(0,0)});
+            }
+        });
     }
 
     public interface OnInitFragmentInteractionListener {

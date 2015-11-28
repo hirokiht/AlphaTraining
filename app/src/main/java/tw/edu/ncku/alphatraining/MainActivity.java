@@ -19,11 +19,17 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.widget.Toast;
+
+import org.jtransforms.fft.FloatFFT_1D;
+
+import java.util.ArrayDeque;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         InitFragment.OnInitFragmentInteractionListener, DeviceSelectFragment.OnDeviceSelectedListener {
-    private final static Fragment initFragment = new InitFragment();
+    private static final String TAG = "MainActivity";
+    private final static InitFragment initFragment = new InitFragment();
     private final static Fragment deviceSelectFragment = new DeviceSelectFragment();
     private final FragmentManager fragmentManager = getSupportFragmentManager();
     private final static int REQUEST_COARSE_LOCATION = 1;
@@ -32,12 +38,28 @@ public class MainActivity extends AppCompatActivity
     private ActionBarDrawerToggle toggle;
     private ProgressDialog progressDialog = null;
     private static boolean waitingPermission = false;
+    private final static ArrayDeque<Float> queue = new ArrayDeque<>(32);
+    public final static short SAMPLING_PERIOD = 1000/32;   //sample at 32Hz, sampling period is ms resolution
+    private float totalEnergy = 0f, baseline = 0f;
+    private int dataSize = 0;   //used to count avg
+    private final static int BEGIN_FREQ = 8, END_FREQ = 12;
+    private final float alpha = 0.54f, beta = 0.46f;    //parameters for hamming window
+    private final static float[] windowFunction = new float[32];
+
+    public MainActivity(){
+        super();
+        if(windowFunction[0] == 0f)
+            for(int i = 0 ; i < windowFunction.length ; i++)
+                windowFunction[i] = alpha-beta*(float)Math.cos(2*Math.PI*i/(windowFunction.length-1));
+    }
+
     private final AdcManager adcManager = new AdcManager(this, new AdcManager.AdcListener() {
         @Override
         public void onConnectionStateChange(int newState) {
             if(newState == BluetoothProfile.STATE_CONNECTED){
                 if(progressDialog != null)
                     progressDialog.dismiss();
+                adcManager.saveSamplingPeriod(SAMPLING_PERIOD);
             }
         }
 
@@ -58,7 +80,15 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public void onDataBufferReceived(short[] buffer) {
-
+            float[] data = new float[buffer.length];
+            for(int i = 0 ; i < data.length ; i++)
+                data[i] = (float)buffer[i]/2048f;
+            initFragment.appendRawData(data);
+            for(float d : data)
+                queue.push(d);
+            if(queue.size() >= 32){
+                processQueue();
+            }
         }
     });
 
@@ -79,7 +109,7 @@ public class MainActivity extends AppCompatActivity
             requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_COARSE_LOCATION);
             waitingPermission = true;
         }else startDeviceSelect();
-        Log.d("MainActivity", "After request permission");
+        Log.d(TAG, "After request permission");
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
@@ -135,25 +165,30 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onInitStart() {
-        Log.d("MainActivity", "Init onInitStart");
+        queue.clear();
+        totalEnergy = 0f;
+        dataSize = 0;
+        initFragment.resetRawData();
+        adcManager.setBuffered12bitAdcNotification(true);
     }
 
     @Override
     public void onInitCancel() {
-        Log.d("MainActivity", "Init onInitCancel");
-
+        adcManager.setBuffered12bitAdcNotification(false);
     }
 
     @Override
     public void onInitFinish() {
-        Log.d("MainActivity", "Init onInitFinish");
-
+        adcManager.setBuffered12bitAdcNotification(false);
+        baseline = totalEnergy/dataSize;
+        Log.d(TAG, "Baseline: "+baseline);
+        Toast.makeText(MainActivity.this, "Baseline Energy: "+ baseline, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onDeviceSelected(BluetoothDevice device) {
         progressDialog = ProgressDialog.show(this, "Please Wait","Connecting...");
-        Log.d("MainActivity", "Device Selected: " + device);
+        Log.d(TAG, "Device Selected: " + device);
         fragmentManager.beginTransaction().replace(R.id.content_frame, initFragment).commit();
         drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
         toggle.setDrawerIndicatorEnabled(true);
@@ -164,5 +199,24 @@ public class MainActivity extends AppCompatActivity
         fragmentManager.beginTransaction().replace(R.id.content_frame, deviceSelectFragment).commit();
         drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         toggle.setDrawerIndicatorEnabled(false);
+    }
+
+    private void processQueue(){
+        float[] data = new float[queue.size()];
+        Float[] qData = queue.toArray(new Float[data.length]);
+        for(int i = 0 ; i < data.length ; i++)
+            data[i++] = qData[i] == null ? Float.NaN : qData[i]*windowFunction[i];
+        while(queue.size() != 16)
+            queue.pop();
+        FloatFFT_1D fft = new FloatFFT_1D(data.length);
+        fft.realForward(data);
+        float[] fftResult = new float[data.length/2+1];
+        fftResult[0] = data[0];
+        fftResult[fftResult.length-1] = data[1];
+        for(int i = 2 ; i < data.length ; i+=2)
+            fftResult[i>>1] = (float) Math.sqrt(data[i]*data[i]+data[i+1]*data[i+1]);
+        for(int i = BEGIN_FREQ ; i < END_FREQ ; i++)
+            totalEnergy += fftResult[i];
+        dataSize++;
     }
 }
