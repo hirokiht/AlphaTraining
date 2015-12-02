@@ -134,7 +134,8 @@ public class DeviceSelectFragment extends Fragment{
                         }
             }).create().show();
         }else if(!mBluetoothAdapter.isEnabled()){
-            ((MainActivity) getActivity()).toolbar.setTitle(R.string.require_bt);
+            //noinspection ConstantConditions
+            ((MainActivity) getActivity()).getSupportActionBar().setTitle(R.string.require_bt);
             btSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -151,7 +152,8 @@ public class DeviceSelectFragment extends Fragment{
     }
 
     private void startDeviceSelect(){
-        ((MainActivity) getActivity()).toolbar.setTitle(R.string.select_device);
+        //noinspection ConstantConditions
+        ((MainActivity) getActivity()).getSupportActionBar().setTitle(R.string.select_device);
         btSwitch.setVisibility(View.GONE);
         deviceList.setVisibility(View.VISIBLE);
         btSelectBtn.setVisibility(View.VISIBLE);

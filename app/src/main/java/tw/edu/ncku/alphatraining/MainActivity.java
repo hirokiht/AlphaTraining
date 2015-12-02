@@ -27,14 +27,16 @@ import java.util.ArrayDeque;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-        InitFragment.OnInitFragmentInteractionListener, DeviceSelectFragment.OnDeviceSelectedListener {
+        InitFragment.OnInitFragmentInteractionListener, DeviceSelectFragment.OnDeviceSelectedListener,
+        CaptureSessionFragment.SessionFragmentListener{
     private static final String TAG = "MainActivity";
     private final static InitFragment initFragment = new InitFragment();
+    private final static CaptureSessionFragment sessionFrag = new CaptureSessionFragment();
     private final static Fragment deviceSelectFragment = new DeviceSelectFragment();
     private final FragmentManager fragmentManager = getSupportFragmentManager();
     private final static int REQUEST_COARSE_LOCATION = 1;
     private  DrawerLayout drawer;
-    protected Toolbar toolbar;
+    protected NavigationView navigationView;
     private ActionBarDrawerToggle toggle;
     private ProgressDialog progressDialog = null;
     private static boolean waitingPermission = false;
@@ -96,9 +98,8 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -110,7 +111,7 @@ public class MainActivity extends AppCompatActivity
             waitingPermission = true;
         }else startDeviceSelect();
         Log.d(TAG, "After request permission");
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
 
@@ -140,18 +141,17 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         final int id = item.getItemId();
-        toolbar.setTitle(item.getTitle());
+        //noinspection ConstantConditions
+        getSupportActionBar().setTitle(item.getTitle());
         if (id == R.id.nav_init) {
             fragmentManager.beginTransaction().replace(R.id.content_frame, initFragment).commit();
         } else if (id == R.id.nav_capture) {
-
+            fragmentManager.beginTransaction().replace(R.id.content_frame, sessionFrag).commit();
         } else if (id == R.id.nav_result) {
 
         } else if (id == R.id.nav_send) {
 
         }
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -179,6 +179,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onInitFinish() {
+        navigationView.getMenu().findItem(R.id.nav_capture).setEnabled(true);
+        navigationView.setCheckedItem(R.id.nav_capture);
+        fragmentManager.beginTransaction().replace(R.id.content_frame, sessionFrag).commit();
         adcManager.setBuffered12bitAdcNotification(false);
         baseline = totalEnergy/dataSize;
         Log.d(TAG, "Baseline: "+baseline);
@@ -189,6 +192,7 @@ public class MainActivity extends AppCompatActivity
     public void onDeviceSelected(BluetoothDevice device) {
         progressDialog = ProgressDialog.show(this, "Please Wait","Connecting...");
         Log.d(TAG, "Device Selected: " + device);
+        navigationView.setCheckedItem(R.id.nav_init);
         fragmentManager.beginTransaction().replace(R.id.content_frame, initFragment).commit();
         drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
         toggle.setDrawerIndicatorEnabled(true);
@@ -218,5 +222,20 @@ public class MainActivity extends AppCompatActivity
         for(int i = BEGIN_FREQ ; i < END_FREQ ; i++)
             totalEnergy += fftResult[i];
         dataSize++;
+    }
+
+    @Override
+    public void onSessionStart() {
+        Log.d(TAG,"Session Started!");
+    }
+
+    @Override
+    public void onSessionStop() {
+        Log.d(TAG,"Session Stopped!");
+    }
+
+    @Override
+    public void onSessionFinish() {
+        Log.d(TAG,"Session Finished!");
     }
 }

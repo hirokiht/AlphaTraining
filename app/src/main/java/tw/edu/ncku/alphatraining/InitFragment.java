@@ -22,7 +22,7 @@ import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
 public class InitFragment extends Fragment implements CompoundButton.OnCheckedChangeListener{
-    private ToneGenerator toneGenerator = new ToneGenerator(AudioManager.STREAM_NOTIFICATION,ToneGenerator.MAX_VOLUME);
+    private static ToneGenerator toneGenerator = new ToneGenerator(AudioManager.STREAM_NOTIFICATION,ToneGenerator.MAX_VOLUME);
     private ToggleButton theButton = null;
     private TextView timeText = null;
     private ProgressBar timeProgress = null;
@@ -33,17 +33,12 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
     private LineGraphSeries<DataPoint> rawDataSeries = new LineGraphSeries<>();
     private static final int rawDataWindowSize =10 * 1000 / MainActivity.SAMPLING_PERIOD;
 
-    private final static int countDownSeconds = 120;
+    private final static int countDownSeconds = 1;
 
     private OnInitFragmentInteractionListener mListener;
 
     public InitFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -80,7 +75,9 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
             throw new RuntimeException(context.toString()
                     + " must implement OnInitFragmentInteractionListener");
         }
-        ((MainActivity)getActivity()).toolbar.setTitle(R.string.getBaseline);
+        ((MainActivity)getActivity()).navigationView.setCheckedItem(R.id.nav_init);
+        //noinspection ConstantConditions
+        ((MainActivity)getActivity()).getSupportActionBar().setTitle(R.string.getBaseline);
     }
 
     @Override

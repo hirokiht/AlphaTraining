@@ -1,0 +1,29 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="tw.edu.ncku.alphatraining.CaptureSessionFragment">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:id="@+id/timeText"
+        android:textSize="40sp"
+        android:layout_margin="@dimen/activity_vertical_margin"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:layout_gravity="center_horizontal" />
+
+    <ToggleButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/theButton"
+        android:textOff="@string/start"
+        android:textOn="@string/stop"
+        android:layout_gravity="center_horizontal" />
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/energyGraph"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</LinearLayout>
