@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity
     private float totalEnergy = 0f, baseline = 0f;
     private int dataSize = 0;   //used to count avg
     private final static int BEGIN_FREQ = 8, END_FREQ = 12;
-    private final float alpha = 0.54f, beta = 0.46f;    //parameters for hamming window
+    private final static float alpha = 0.54f, beta = 0.46f;    //parameters for hamming window
     private final static float[] windowFunction = new float[32];
 
     public MainActivity(){
