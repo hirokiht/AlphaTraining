@@ -9,16 +9,17 @@
         android:layout_height="wrap_content"
         android:text="@string/turn_on_bt"
         android:id="@+id/btSwitch"
-        android:layout_gravity="center"
         android:visibility="gone"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true" />
 
-    <Spinner
+    <ListView
+        android:id="@+id/deviceList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/deviceSpinner"
-        android:visibility="gone"
+        android:choiceMode="singleChoice"
+        android:layout_above="@+id/btSelectBtn"
+        android:layout_alignParentTop="true"
         android:layout_alignParentStart="true" />
 
     <Button
@@ -27,7 +28,6 @@
         android:text="@string/select_bt"
         android:id="@+id/btSelectBtn"
         android:enabled="false"
-        android:visibility="gone"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
 </RelativeLayout>

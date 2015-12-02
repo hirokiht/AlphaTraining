@@ -22,7 +22,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.Spinner;
+import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -39,7 +39,7 @@ import java.util.List;
 public class DeviceSelectFragment extends Fragment{
     final private static BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     private Switch btSwitch;
-    private Spinner deviceSpinner;
+    private ListView deviceList;
     private Button btSelectBtn;
     private static ArrayAdapter<BluetoothDevice> deviceArrayAdapter;
     private BluetoothDevice device;
@@ -60,7 +60,6 @@ public class DeviceSelectFragment extends Fragment{
         public void onReceive(Context context, Intent intent) {
             if(intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,0) == BluetoothAdapter.STATE_ON)
                 mBluetoothAdapter.getBluetoothLeScanner().startScan(filters, new ScanSettings.Builder().build(),scanCb);
-
         }
     };
 
@@ -71,29 +70,20 @@ public class DeviceSelectFragment extends Fragment{
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_device_select, container, false);
         btSwitch = (Switch) view.findViewById(R.id.btSwitch);
-        deviceSpinner = (Spinner) view.findViewById(R.id.deviceSpinner);
+        deviceList = (ListView) view.findViewById(R.id.deviceList);
         btSelectBtn = (Button) view.findViewById(R.id.btSelectBtn);
         btSelectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.onDeviceSelected(deviceArrayAdapter.getItem(deviceSpinner.getSelectedItemPosition()));
+                mListener.onDeviceSelected(device);
             }
         });
-        deviceSpinner.setAdapter(deviceArrayAdapter);
-        deviceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        deviceList.setAdapter(deviceArrayAdapter);
+        deviceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (view == null)
-                    return;
-                if (device != deviceArrayAdapter.getItem(position)) {
-                    device = deviceArrayAdapter.getItem(position);
-                    btSelectBtn.setEnabled(device != null);
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                device = deviceArrayAdapter.getItem(position);
+                btSelectBtn.setEnabled(device != null);
             }
         });
         return view;
@@ -110,31 +100,18 @@ public class DeviceSelectFragment extends Fragment{
         }
         context.registerReceiver(bcastReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
         if(deviceArrayAdapter == null){
-            deviceArrayAdapter = new ArrayAdapter<BluetoothDevice>(getContext(),R.layout.support_simple_spinner_dropdown_item){
-                @Override
-                public View getDropDownView(int position, View convertView, ViewGroup parent) {
-                    BluetoothDevice device = getItem(position);
-                    TextView textView = device == null? (TextView)getActivity().getLayoutInflater().inflate(
-                            R.layout.support_simple_spinner_dropdown_item,parent,false) :
-                            (TextView) super.getDropDownView(position, convertView, parent);
-                    textView.setText(device == null? "(None)" :
-                            device.getName() == null? device.getAddress() :
-                            device.getName()+"("+device.getAddress()+")");
-                    return textView;
-                }
-
+            deviceArrayAdapter = new ArrayAdapter<BluetoothDevice>(getContext(),android.R.layout.simple_list_item_single_choice){
                 @Override
                 public View getView(int position, View convertView, ViewGroup parent) {
-                    BluetoothDevice device = getItem(position);
-                    TextView textView = device == null? new TextView(getContext()) :
-                            (TextView) super.getView(position, convertView, parent);
-                    textView.setText(device == null? "Select the Bluetooth Device: " :
-                            device.getName() == null? device.getAddress() :
-                                    device.getName()+"("+device.getAddress()+")");
+                    if(convertView != null)
+                        return convertView;
+                    TextView textView = (TextView) super.getView(position, convertView, parent);
+                    final BluetoothDevice device = getItem(position);
+                    textView.setText(device.getName() == null ? device.getAddress() :
+                            device.getName() + "(" + device.getAddress() + ")");
                     return textView;
                 }
             };
-            deviceArrayAdapter.add(null);
         }
     }
 
@@ -157,24 +134,26 @@ public class DeviceSelectFragment extends Fragment{
                         }
             }).create().show();
         }else if(!mBluetoothAdapter.isEnabled()){
-            ((MainActivity)getActivity()).toolbar.setTitle(R.string.require_bt);
+            ((MainActivity) getActivity()).toolbar.setTitle(R.string.require_bt);
             btSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    if(isChecked){
+                    if (isChecked) {
                         mBluetoothAdapter.enable();
                         startDeviceSelect();
                     }
                 }
             });
             btSwitch.setVisibility(View.VISIBLE);
+            deviceList.setVisibility(View.GONE);
+            btSelectBtn.setVisibility(View.GONE);
         }else startDeviceSelect();
     }
 
     private void startDeviceSelect(){
-        ((MainActivity)getActivity()).toolbar.setTitle(R.string.select_device);
+        ((MainActivity) getActivity()).toolbar.setTitle(R.string.select_device);
         btSwitch.setVisibility(View.GONE);
-        deviceSpinner.setVisibility(View.VISIBLE);
+        deviceList.setVisibility(View.VISIBLE);
         btSelectBtn.setVisibility(View.VISIBLE);
         btSelectBtn.setEnabled(false);
         if(mBluetoothAdapter.isEnabled())
