@@ -26,7 +26,7 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
     private ToggleButton theButton = null;
     private TextView timeText = null;
     private ProgressBar timeProgress = null;
-    private CountDownTimer timer;
+    private static CountDownTimer timer;
     private GraphView graphView;
     private final Handler handler = new Handler();
     private Runnable task;
@@ -127,33 +127,37 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
     }
 
     public void addEnergyData(final float energy){
-        totalEnergy += energy;
-        dataSize++;
+        if(timer != null) {
+            totalEnergy += energy;
+            dataSize++;
+        }
     }
 
     public void appendRawData(final float datum){
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                rawDataSeries.appendData(new DataPoint(rawDataSeries.isEmpty() ? 0f :
-                        rawDataSeries.getHighestValueX() + 0.5f, datum*100), true, rawDataWindowSize);
-                graphView.getViewport().setMinX(rawDataSeries.getLowestValueX());
-                graphView.getViewport().setMaxX(rawDataSeries.getHighestValueX());
-            }
-        });
+        if(timer != null)
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    rawDataSeries.appendData(new DataPoint(rawDataSeries.isEmpty() ? 0f :
+                            rawDataSeries.getHighestValueX() + 0.5f, datum*100), true, rawDataWindowSize);
+                    graphView.getViewport().setMinX(rawDataSeries.getLowestValueX());
+                    graphView.getViewport().setMaxX(rawDataSeries.getHighestValueX());
+                }
+            });
     }
 
     public void appendRawData(final float[] data){
-        handler.post(task = new Runnable() {
-            @Override
-            public void run() {
-                for(final double datum : data)
-                    rawDataSeries.appendData(new DataPoint(rawDataSeries.isEmpty() ? 0f :
-                        rawDataSeries.getHighestValueX() + 0.5f, datum*100), true, rawDataWindowSize);
-                graphView.getViewport().setMinX(rawDataSeries.getLowestValueX());
-                graphView.getViewport().setMaxX(rawDataSeries.getHighestValueX());
-            }
-        });
+        if(timer != null)
+            handler.post(task = new Runnable() {
+                @Override
+                public void run() {
+                    for(final double datum : data)
+                        rawDataSeries.appendData(new DataPoint(rawDataSeries.isEmpty() ? 0f :
+                            rawDataSeries.getHighestValueX() + 0.5f, datum*100), true, rawDataWindowSize);
+                    graphView.getViewport().setMinX(rawDataSeries.getLowestValueX());
+                    graphView.getViewport().setMaxX(rawDataSeries.getHighestValueX());
+                }
+            });
     }
 
     public void resetData(){
