@@ -37,7 +37,7 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
     private SessionFragmentListener mListener;
 
     private final Handler handler = new Handler();
-    private CountDownTimer timer;
+    private static CountDownTimer timer;
     private final static int countDownSeconds = 6*60;
     private static final int energyDataWindowSize = 10 * 1000 / MainActivity.SAMPLING_PERIOD;
     private static final int graphScale = 100;
@@ -163,6 +163,8 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
     }
 
     public void appendEnergyData(final float datum){
+        if(timer == null)
+            return;
         handler.post(task = new Runnable() {
             @Override
             public void run() {
