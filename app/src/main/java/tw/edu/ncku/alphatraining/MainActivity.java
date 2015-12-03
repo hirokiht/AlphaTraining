@@ -42,8 +42,7 @@ public class MainActivity extends AppCompatActivity
     private static boolean waitingPermission = false;
     private final static ArrayDeque<Float> queue = new ArrayDeque<>(32);
     public final static short SAMPLING_PERIOD = 1000/32;   //sample at 32Hz, sampling period is ms resolution
-    private float totalEnergy = 0f, baseline = 0f;
-    private int dataSize = 0;   //used to count avg
+    private float baseline = 0f;
     private final static int BEGIN_FREQ = 8, END_FREQ = 12;
     private final static float alpha = 0.54f, beta = 0.46f;    //parameters for hamming window
     private final static float[] windowFunction = new float[32];
@@ -85,7 +84,8 @@ public class MainActivity extends AppCompatActivity
             float[] data = new float[buffer.length];
             for(int i = 0 ; i < data.length ; i++)
                 data[i] = (float)buffer[i]/2048f;
-            initFragment.appendRawData(data);
+            if(initFragment.isAdded())
+                initFragment.appendRawData(data);
             for(float d : data)
                 queue.push(d);
             if(queue.size() >= 32){
@@ -166,9 +166,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onInitStart() {
         queue.clear();
-        totalEnergy = 0f;
-        dataSize = 0;
-        initFragment.resetRawData();
+        initFragment.resetData();
         adcManager.setBuffered12bitAdcNotification(true);
     }
 
@@ -178,12 +176,12 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onInitFinish() {
+    public void onInitFinish(float avg) {
         navigationView.getMenu().findItem(R.id.nav_capture).setEnabled(true);
         navigationView.setCheckedItem(R.id.nav_capture);
         fragmentManager.beginTransaction().replace(R.id.content_frame, sessionFrag).commit();
         adcManager.setBuffered12bitAdcNotification(false);
-        baseline = totalEnergy/dataSize;
+        baseline = avg;
         Log.d(TAG, "Baseline: "+baseline);
         Toast.makeText(MainActivity.this, "Baseline Energy: "+ baseline, Toast.LENGTH_SHORT).show();
     }
@@ -219,23 +217,32 @@ public class MainActivity extends AppCompatActivity
         fftResult[fftResult.length-1] = data[1];
         for(int i = 2 ; i < data.length ; i+=2)
             fftResult[i>>1] = (float) Math.sqrt(data[i]*data[i]+data[i+1]*data[i+1]);
-        for(int i = BEGIN_FREQ ; i < END_FREQ ; i++)
-            totalEnergy += fftResult[i];
-        dataSize++;
+        float energy = 0f;
+        for (int i = BEGIN_FREQ; i < END_FREQ; i++)
+            energy += fftResult[i];
+        if(initFragment.isAdded()) {
+            initFragment.addEnergyData(energy);
+        }else if(sessionFrag.isAdded()){
+            sessionFrag.appendEnergyData(energy);
+        }
     }
 
     @Override
-    public void onSessionStart() {
-        Log.d(TAG,"Session Started!");
+    public float onSessionStart() {
+        adcManager.setBuffered12bitAdcNotification(true);
+        return baseline;
     }
 
     @Override
     public void onSessionStop() {
+        adcManager.setBuffered12bitAdcNotification(false);
         Log.d(TAG,"Session Stopped!");
     }
 
     @Override
-    public void onSessionFinish() {
-        Log.d(TAG,"Session Finished!");
+    public void onSessionFinish(@NonNull float[] data, int alphaCount) {
+        adcManager.setBuffered12bitAdcNotification(false);
+        Toast.makeText(this,"Session Finished! Alpha Duration: " + alphaCount/2f,Toast.LENGTH_SHORT).show();
+        Log.d(TAG,"Session Finished! Alpha Duration: "+alphaCount/2f);
     }
 }

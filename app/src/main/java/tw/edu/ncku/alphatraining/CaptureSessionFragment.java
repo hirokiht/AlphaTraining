@@ -3,9 +3,11 @@ package tw.edu.ncku.alphatraining;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,8 +19,11 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.LegendRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
+
+import java.util.ArrayList;
 
 
 /**
@@ -35,15 +40,23 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
     private CountDownTimer timer;
     private final static int countDownSeconds = 6*60;
     private static final int energyDataWindowSize = 10 * 1000 / MainActivity.SAMPLING_PERIOD;
+    private static final int graphScale = 100;
 
     private TextView timeText;
     private ToggleButton theButton;
     private GraphView energyGraph;
     private Runnable task;
-    private LineGraphSeries<DataPoint> energySeries = new LineGraphSeries<>();
+    private LineGraphSeries<DataPoint> energySeries = new LineGraphSeries<>(),
+        baselineSeries = new LineGraphSeries<>();
+    private ArrayList<Float> energyData = new ArrayList<>(countDownSeconds*2);
+    private float baseline = 0f;
+    private int alphaCount = 0;
 
+
+    @SuppressWarnings("deprecation")
     public CaptureSessionFragment() {
-        // Required empty public constructor
+        energySeries.setTitle("Alpha Energy");
+        baselineSeries.setTitle("Baseline Energy");
     }
 
 
@@ -55,8 +68,23 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
         timeText = (TextView) view.findViewById(R.id.timeText);
         theButton = (ToggleButton) view.findViewById(R.id.theButton);
         energyGraph = (GraphView) view.findViewById(R.id.energyGraph);
-        timeText.setText(countDownSeconds/60+":"+String.format("%02d",countDownSeconds%60));
+        timeText.setText(countDownSeconds / 60 + ":" + String.format("%02d", countDownSeconds % 60));
         theButton.setOnCheckedChangeListener(this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            energySeries.setColor(getResources().getColor(R.color.colorPrimary,null));
+            baselineSeries.setColor(getResources().getColor(R.color.colorAccent,null));
+        }else{
+            //noinspection deprecation
+            energySeries.setColor(getResources().getColor(R.color.colorPrimary));
+            //noinspection deprecation
+            baselineSeries.setColor(getResources().getColor(R.color.colorAccent));
+        }
+        energyGraph.addSeries(energySeries);
+        energyGraph.addSeries(baselineSeries);
+        energyGraph.getViewport().setXAxisBoundsManual(true);
+        energyGraph.getGridLabelRenderer().setPadding(32);
+        energyGraph.getLegendRenderer().setVisible(true);
+        energyGraph.getLegendRenderer().setAlign(LegendRenderer.LegendAlign.TOP);
         return view;
     }
 
@@ -110,11 +138,23 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
                 }
             };
             timer.start();
-            mListener.onSessionStart();
+            alphaCount = 0;
+            baseline = mListener.onSessionStart()*1.5f;
+            energyData.clear();
+            handler.post(task = new Runnable() {
+                @Override
+                public void run() {
+                    energySeries.resetData(new DataPoint[]{new DataPoint(0, 0)});
+                    baselineSeries.resetData(new DataPoint[]{new DataPoint(0, baseline*graphScale)});
+                }
+            });
         }else{
-            if(timer == null)
-                mListener.onSessionFinish();
-            else{
+            if(timer == null) {
+                float[] data = new float[energyData.size()];
+                for(int i = 0 ; i < data.length ; i++)
+                    data[i] = energyData.get(i);
+                mListener.onSessionFinish(data,alphaCount);
+            }else{
                 mListener.onSessionStop();
                 timer.cancel();
             }
@@ -126,26 +166,32 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
         handler.post(task = new Runnable() {
             @Override
             public void run() {
+                baselineSeries.appendData(new DataPoint(baselineSeries.isEmpty() ? 0f :
+                        baselineSeries.getHighestValueX() + 0.5f, baseline*graphScale), true, energyDataWindowSize);
                 energySeries.appendData(new DataPoint(energySeries.isEmpty() ? 0f :
-                        energySeries.getHighestValueX() + 0.5f, datum*100), true, energyDataWindowSize);
+                        energySeries.getHighestValueX() + 0.5f, datum*graphScale), true, energyDataWindowSize);
                 energyGraph.getViewport().setMinX(energySeries.getLowestValueX());
                 energyGraph.getViewport().setMaxX(energySeries.getHighestValueX());
             }
         });
+        energyData.add(datum);
+        if(datum >= baseline)
+            alphaCount++;
     }
 
-    public void reset(){
+    public void reset() {
         handler.post(task = new Runnable() {
             @Override
             public void run() {
                 energySeries.resetData(new DataPoint[]{new DataPoint(0, 0)});
+                baselineSeries.resetData(new DataPoint[]{new DataPoint(0, baseline*graphScale)});
             }
         });
         if(timer != null) {
             timer.cancel();
             timer = null;
         }
-        timeText.setText(countDownSeconds/60+":"+String.format("%02d",countDownSeconds%60));
+        timeText.setText(countDownSeconds / 60 + ":" + String.format("%02d",countDownSeconds%60));
         theButton.setChecked(false);
     }
 
@@ -160,8 +206,8 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface SessionFragmentListener {
-        void onSessionStart();
+        float onSessionStart(); //return baseline
         void onSessionStop();
-        void onSessionFinish();
+        void onSessionFinish(@NonNull float[] data, int alphaCount);
     }
 }

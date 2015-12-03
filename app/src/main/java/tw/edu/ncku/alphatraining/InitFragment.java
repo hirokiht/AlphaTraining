@@ -31,9 +31,11 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
     private final Handler handler = new Handler();
     private Runnable task;
     private LineGraphSeries<DataPoint> rawDataSeries = new LineGraphSeries<>();
+    private int dataSize = 0;   //used to count avg
+    private float totalEnergy = 0f;
     private static final int rawDataWindowSize =10 * 1000 / MainActivity.SAMPLING_PERIOD;
 
-    private final static int countDownSeconds = 1;
+    private final static int countDownSeconds = 120;
 
     private OnInitFragmentInteractionListener mListener;
 
@@ -115,13 +117,18 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
             mListener.onInitStart();
         }else{
             if(timeProgress.getProgress() == 0)
-                mListener.onInitFinish();
+                mListener.onInitFinish(totalEnergy/dataSize);
             else mListener.onInitCancel();
             if(timer != null)
                 timer.cancel();
             timeProgress.setProgress(timeProgress.getMax());
             timeText.setText(Integer.toString(timeProgress.getMax()));
         }
+    }
+
+    public void addEnergyData(final float energy){
+        totalEnergy += energy;
+        dataSize++;
     }
 
     public void appendRawData(final float datum){
@@ -149,7 +156,9 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
         });
     }
 
-    public void resetRawData(){
+    public void resetData(){
+        totalEnergy = 0f;
+        dataSize = 0;
         handler.post(task = new Runnable() {
             @Override
             public void run() {
@@ -161,6 +170,6 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
     public interface OnInitFragmentInteractionListener {
         void onInitStart();
         void onInitCancel();
-        void onInitFinish();
+        void onInitFinish(float avg);
     }
 }
