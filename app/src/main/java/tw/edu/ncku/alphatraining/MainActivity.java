@@ -119,12 +119,15 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume(){
         super.onResume();
-        if(!waitingPermission)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED)
-                finish();
-            else startDeviceSelect();
+        if(waitingPermission)
+            return;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED)
+            finish();
+        else if(adcManager.getDevice() == null)
+            startDeviceSelect();
+        else fragmentManager.beginTransaction().replace(R.id.content_frame, baseline==0f? initFragment : sessionFrag).commit();
     }
 
     @Override

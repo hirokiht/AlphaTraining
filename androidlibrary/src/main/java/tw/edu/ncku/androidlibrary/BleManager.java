@@ -120,6 +120,10 @@ public class BleManager {
         } else throw new UnsupportedOperationException("Only support Android 4.3 and above!");
     }
 
+    public BluetoothDevice getDevice(){
+        return device;
+    }
+
     public void setDevice(BluetoothDevice device){
         if(btGatt != null && device != this.device)
             btGatt.close();
