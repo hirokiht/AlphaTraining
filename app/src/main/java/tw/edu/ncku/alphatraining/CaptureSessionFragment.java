@@ -50,7 +50,6 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
         baselineSeries = new LineGraphSeries<>();
     private ArrayList<Float> energyData = new ArrayList<>(countDownSeconds*2);
     private float baseline = 0f;
-    private int alphaCount = 0;
 
 
     @SuppressWarnings("deprecation")
@@ -138,8 +137,7 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
                 }
             };
             timer.start();
-            alphaCount = 0;
-            baseline = mListener.onSessionStart()*1.5f;
+            baseline = mListener.onSessionStart();
             energyData.clear();
             handler.post(task = new Runnable() {
                 @Override
@@ -153,7 +151,7 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
                 float[] data = new float[energyData.size()];
                 for(int i = 0 ; i < data.length ; i++)
                     data[i] = energyData.get(i);
-                mListener.onSessionFinish(data,alphaCount);
+                mListener.onSessionFinish(data);
             }else{
                 mListener.onSessionStop();
                 timer.cancel();
@@ -177,8 +175,6 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
             }
         });
         energyData.add(datum);
-        if(datum >= baseline)
-            alphaCount++;
     }
 
     public void reset() {
@@ -210,6 +206,6 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
     public interface SessionFragmentListener {
         float onSessionStart(); //return baseline
         void onSessionStop();
-        void onSessionFinish(@NonNull float[] data, int alphaCount);
+        void onSessionFinish(@NonNull float[] data);
     }
 }

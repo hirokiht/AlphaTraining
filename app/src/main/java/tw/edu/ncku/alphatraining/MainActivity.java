@@ -26,13 +26,13 @@ import org.jtransforms.fft.FloatFFT_1D;
 import java.util.ArrayDeque;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener,
-        InitFragment.OnInitFragmentInteractionListener, DeviceSelectFragment.OnDeviceSelectedListener,
-        CaptureSessionFragment.SessionFragmentListener{
+        implements InitFragment.OnInitFragmentInteractionListener, DeviceSelectFragment.OnDeviceSelectedListener,
+        CaptureSessionFragment.SessionFragmentListener, ResultsFragment.OnResultSendListener{
     private static final String TAG = "MainActivity";
     private final static InitFragment initFragment = new InitFragment();
     private final static CaptureSessionFragment sessionFrag = new CaptureSessionFragment();
     private final static Fragment deviceSelectFragment = new DeviceSelectFragment();
+    private final static ResultsFragment resultFragment = new ResultsFragment();
     private final FragmentManager fragmentManager = getSupportFragmentManager();
     private final static int REQUEST_COARSE_LOCATION = 1;
     private  DrawerLayout drawer;
@@ -42,7 +42,6 @@ public class MainActivity extends AppCompatActivity
     private static boolean waitingPermission = false;
     private final static ArrayDeque<Float> queue = new ArrayDeque<>(32);
     public final static short SAMPLING_PERIOD = 1000/32;   //sample at 32Hz, sampling period is ms resolution
-    private float baseline = 0f;
     private final static int BEGIN_FREQ = 8, END_FREQ = 12;
     private final static float alpha = 0.54f, beta = 0.46f;    //parameters for hamming window
     private final static float[] windowFunction = new float[32];
@@ -105,15 +104,27 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
-        if(savedInstanceState != null && savedInstanceState.getFloat("baseline") != 0f)
-            baseline = savedInstanceState.getFloat("baseline");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
                 ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_COARSE_LOCATION);
             waitingPermission = true;
         }else startDeviceSelect();
         navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(MenuItem item) {
+                final int id = item.getItemId();
+                if (id == R.id.nav_init) {
+                    fragmentManager.beginTransaction().replace(R.id.content_frame, initFragment).commit();
+                }else if (id == R.id.nav_capture) {
+                    fragmentManager.beginTransaction().replace(R.id.content_frame, sessionFrag).commit();
+                }else if (id == R.id.nav_result) {
+                    fragmentManager.beginTransaction().replace(R.id.content_frame, resultFragment).commit();
+                }else return false;
+                drawer.closeDrawer(GravityCompat.START);
+                return true;
+            }
+        });
     }
 
     @Override
@@ -127,12 +138,12 @@ public class MainActivity extends AppCompatActivity
             finish();
         else if(adcManager.getDevice() == null)
             startDeviceSelect();
-        else fragmentManager.beginTransaction().replace(R.id.content_frame, baseline==0f? initFragment : sessionFrag).commit();
+        else fragmentManager.beginTransaction().replace(R.id.content_frame,
+                    resultFragment.getBaseline()==0f? initFragment : sessionFrag).commit();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState){
-        outState.putFloat("baseline",baseline);
         super.onSaveInstanceState(outState);
     }
 
@@ -144,26 +155,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             super.onBackPressed();
         }
-    }
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        final int id = item.getItemId();
-        //noinspection ConstantConditions
-        getSupportActionBar().setTitle(item.getTitle());
-        if (id == R.id.nav_init) {
-            fragmentManager.beginTransaction().replace(R.id.content_frame, initFragment).commit();
-        } else if (id == R.id.nav_capture) {
-            fragmentManager.beginTransaction().replace(R.id.content_frame, sessionFrag).commit();
-        } else if (id == R.id.nav_result) {
-
-        } else if (id == R.id.nav_send) {
-
-        }
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
     }
 
     @Override
@@ -191,9 +182,8 @@ public class MainActivity extends AppCompatActivity
         navigationView.setCheckedItem(R.id.nav_capture);
         fragmentManager.beginTransaction().replace(R.id.content_frame, sessionFrag).commit();
         adcManager.setBuffered12bitAdcNotification(false);
-        baseline = avg;
-        Log.d(TAG, "Baseline: "+baseline);
-        Toast.makeText(MainActivity.this, "Baseline Energy: "+ baseline, Toast.LENGTH_SHORT).show();
+        resultFragment.setBaseline(avg*1.5f);
+        Toast.makeText(MainActivity.this, "Baseline Energy: "+ resultFragment.getBaseline(), Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -201,7 +191,8 @@ public class MainActivity extends AppCompatActivity
         progressDialog = ProgressDialog.show(this, "Please Wait","Connecting...");
         Log.d(TAG, "Device Selected: " + device);
         navigationView.setCheckedItem(R.id.nav_init);
-        fragmentManager.beginTransaction().replace(R.id.content_frame, baseline==0f? initFragment : sessionFrag).commit();
+        fragmentManager.beginTransaction().replace(R.id.content_frame,
+                resultFragment.getBaseline()==0f? initFragment : sessionFrag).commit();
         drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
         toggle.setDrawerIndicatorEnabled(true);
         adcManager.setDevice(device);
@@ -240,7 +231,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public float onSessionStart() {
         adcManager.setBuffered12bitAdcNotification(true);
-        return baseline;
+        return resultFragment.getBaseline();
     }
 
     @Override
@@ -250,9 +241,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onSessionFinish(@NonNull float[] data, int alphaCount) {
+    public void onSessionFinish(@NonNull float[] data) {
         adcManager.setBuffered12bitAdcNotification(false);
-        Toast.makeText(this,"Session Finished! Alpha Duration: " + alphaCount/2f,Toast.LENGTH_SHORT).show();
-        Log.d(TAG,"Session Finished! Alpha Duration: "+alphaCount/2f);
+        resultFragment.appendResult(data);
+        fragmentManager.beginTransaction().replace(R.id.content_frame, resultFragment).commit();
+    }
+
+    @Override
+    public void onResultSend(String result) {
+        Log.d(TAG,"Result: "+result);
+        //TODO: implement result send
     }
 }

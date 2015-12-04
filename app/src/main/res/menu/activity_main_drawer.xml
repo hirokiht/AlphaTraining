@@ -9,15 +9,7 @@
             android:title="@string/startSession" />
         <item android:id="@+id/nav_result"
             android:enabled="false"
-            android:title="Results" />
+            android:title="@string/getResult" />
     </group>
-
-    <item android:title="Communicate">
-        <menu>
-            <item android:id="@+id/nav_send" android:icon="@android:drawable/ic_menu_send"
-                android:enabled="false"
-                android:title="Send" />
-        </menu>
-    </item>
 
 </menu>
