@@ -105,12 +105,13 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
+        if(savedInstanceState != null && savedInstanceState.getFloat("baseline") != 0f)
+            baseline = savedInstanceState.getFloat("baseline");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
                 ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_COARSE_LOCATION);
             waitingPermission = true;
         }else startDeviceSelect();
-        Log.d(TAG, "After request permission");
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
@@ -124,6 +125,12 @@ public class MainActivity extends AppCompatActivity
                         != PackageManager.PERMISSION_GRANTED)
                 finish();
             else startDeviceSelect();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState){
+        outState.putFloat("baseline",baseline);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -191,7 +198,7 @@ public class MainActivity extends AppCompatActivity
         progressDialog = ProgressDialog.show(this, "Please Wait","Connecting...");
         Log.d(TAG, "Device Selected: " + device);
         navigationView.setCheckedItem(R.id.nav_init);
-        fragmentManager.beginTransaction().replace(R.id.content_frame, initFragment).commit();
+        fragmentManager.beginTransaction().replace(R.id.content_frame, baseline==0f? initFragment : sessionFrag).commit();
         drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
         toggle.setDrawerIndicatorEnabled(true);
         adcManager.setDevice(device);
