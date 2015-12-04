@@ -1,13 +1,14 @@
 package tw.edu.ncku.alphatraining;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
+import android.widget.ExpandableListView;
+import android.widget.TextView;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -15,8 +16,10 @@ import android.view.ViewGroup;
  * {@link ResultsFragment.OnResultSendListener} interface
  * to handle interaction events.
  */
-public class ResultsFragment extends Fragment {
+public class ResultsFragment extends Fragment implements View.OnClickListener{
     private float baseline = 0f;
+    private TextView baselineText;
+    private ExpandableListView resultList;
 
     private OnResultSendListener mListener;
 
@@ -29,11 +32,15 @@ public class ResultsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_results, container, false);
+        View view = inflater.inflate(R.layout.fragment_results, container, false);
+        FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.sendActionBtn);
+        baselineText = (TextView) view.findViewById(R.id.baselineText);
+        resultList = (ExpandableListView) view.findViewById(R.id.resultList);
+        fab.setOnClickListener(this);
+        return view;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed() {
+    public void onClick(View view) {
         if (mListener != null) {
             mListener.onResultSend("");
         }

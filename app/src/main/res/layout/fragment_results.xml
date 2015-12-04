@@ -11,7 +11,8 @@
         android:text="@string/baseline_display"
         android:layout_alignParentTop="true"
         android:layout_alignParentStart="true"
-        android:layout_alignEnd="@+id/baselineText"
+        android:layout_alignBottom="@id/baselineText"
+        android:layout_toStartOf="@id/baselineText"
         />
     <TextView
         android:id="@id/baselineText"
@@ -21,10 +22,22 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         />
+
     <ExpandableListView
+        android:id="@+id/resultList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignTop="@id/baselineText"
+        android:layout_below="@+id/baselineText"
+        android:layout_alignParentStart="true" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/sendActionBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="@dimen/fab_margin"
+        tools:ignore="RelativeOverlap"
+        android:src="@android:drawable/ic_menu_send"
         />
 </RelativeLayout>
