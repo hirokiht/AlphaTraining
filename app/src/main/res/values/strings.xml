@@ -29,4 +29,7 @@
     <string name="sendResult">Send Result</string>
 
     <string name="date_format">MM-dd HH:mm</string>
+
+    <string name="header_title">NCKU CSIE</string>
+    <string name="header_desc">www.csie.ncku.edu.tw</string>
 </resources>
