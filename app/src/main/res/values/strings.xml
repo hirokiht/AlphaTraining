@@ -27,4 +27,6 @@
     <string name="startSession">Start Capture</string>
     <string name="getResult">Results</string>
     <string name="sendResult">Send Result</string>
+
+    <string name="date_format">MM-dd HH:mm</string>
 </resources>

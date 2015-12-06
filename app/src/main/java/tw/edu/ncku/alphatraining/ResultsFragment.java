@@ -33,8 +33,7 @@ import java.util.Date;
 public class ResultsFragment extends Fragment implements View.OnClickListener{
     private static float baseline = 0f;
     private AbsListView resultList;
-    @SuppressLint("SimpleDateFormat")
-    private static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    private static DateFormat dateFormat;
     private static final ArrayList<String> dates = new ArrayList<>();
     private static final ArrayList<float[]> rawData = new ArrayList<>();
     private static final ResultListAdapter<float[]> listAdapter = new ResultListAdapter<float[]>() {
@@ -124,9 +123,11 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
         }
     }
 
+    @SuppressLint("SimpleDateFormat")
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        dateFormat = new SimpleDateFormat(context.getString(R.string.date_format));
         if (context instanceof OnResultSendListener) {
             mListener = (OnResultSendListener) context;
         } else {
