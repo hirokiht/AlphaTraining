@@ -78,7 +78,8 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
             graph.getLegendRenderer().setAlign(LegendRenderer.LegendAlign.TOP);
             graph.getViewport().setMinX(dataSeries.getLowestValueX());
             graph.getViewport().setMaxX(dataSeries.getHighestValueX());
-            graph.setMinimumHeight(parent.getWidth() / 2);
+            graph.setMinimumHeight(parent.getHeight()>parent.getWidth()?
+                    parent.getWidth() / 2 : parent.getHeight()/2);
             return graph;
         }
     };
