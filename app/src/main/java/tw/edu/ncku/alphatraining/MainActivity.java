@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity
         else if(adcManager.getDevice() == null)
             startDeviceSelect();
         else fragmentManager.beginTransaction().replace(R.id.content_frame,
-                    resultFragment.getBaseline()==0f? initFragment : sessionFrag).commit();
+                    ResultsFragment.getBaseline()==0f? initFragment : sessionFrag).commit();
     }
 
     @Override
@@ -182,8 +182,8 @@ public class MainActivity extends AppCompatActivity
         navigationView.setCheckedItem(R.id.nav_capture);
         fragmentManager.beginTransaction().replace(R.id.content_frame, sessionFrag).commit();
         adcManager.setBuffered12bitAdcNotification(false);
-        resultFragment.setBaseline(avg*1.5f);
-        Toast.makeText(MainActivity.this, "Baseline Energy: "+ resultFragment.getBaseline(), Toast.LENGTH_SHORT).show();
+        ResultsFragment.setBaseline(avg*1.5f);
+        Toast.makeText(MainActivity.this, "Baseline Energy: "+ ResultsFragment.getBaseline(), Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -192,7 +192,7 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "Device Selected: " + device);
         navigationView.setCheckedItem(R.id.nav_init);
         fragmentManager.beginTransaction().replace(R.id.content_frame,
-                resultFragment.getBaseline()==0f? initFragment : sessionFrag).commit();
+                ResultsFragment.getBaseline()==0f? initFragment : sessionFrag).commit();
         drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
         toggle.setDrawerIndicatorEnabled(true);
         adcManager.setDevice(device);
@@ -229,9 +229,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public float onSessionStart() {
+    public void onSessionStart() {
         adcManager.setBuffered12bitAdcNotification(true);
-        return resultFragment.getBaseline();
     }
 
     @Override
@@ -245,11 +244,12 @@ public class MainActivity extends AppCompatActivity
         adcManager.setBuffered12bitAdcNotification(false);
         resultFragment.appendResult(data);
         fragmentManager.beginTransaction().replace(R.id.content_frame, resultFragment).commit();
+        navigationView.getMenu().findItem(R.id.nav_result).setEnabled(true);
     }
 
     @Override
     public void onResultSend(String result) {
-        Log.d(TAG,"Result: "+result);
+        Log.d(TAG,result);
         //TODO: implement result send
     }
 }
