@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -251,7 +252,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onResultSend(String result) {
-        Log.d(TAG,result);
-        //TODO: implement result send
+        Intent resultIntent = new Intent(Intent.ACTION_SEND);
+        resultIntent.putExtra(Intent.EXTRA_TEXT,result);
+        resultIntent.setType("text/csv");
+        startActivity(Intent.createChooser(resultIntent, "Attach Result"));
     }
 }
