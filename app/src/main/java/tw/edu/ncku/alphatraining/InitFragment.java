@@ -166,7 +166,7 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
         handler.post(task = new Runnable() {
             @Override
             public void run() {
-                rawDataSeries.resetData(new DataPoint[]{new DataPoint(0,0)});
+                rawDataSeries.resetData(new DataPoint[]{});
             }
         });
     }
