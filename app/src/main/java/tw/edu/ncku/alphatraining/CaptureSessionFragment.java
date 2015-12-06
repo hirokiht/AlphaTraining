@@ -41,7 +41,6 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
     private final Handler handler = new Handler();
     private static CountDownTimer timer;
     private final static int countDownSeconds = 6*60;
-    private static final int energyDataWindowSize = 10 * 1000 / MainActivity.SAMPLING_PERIOD;
     private static final int energyBarScale = 10000;
 
     private TextView timeText;
@@ -187,7 +186,7 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
             public void run() {
                 energyBar.setProgress((int)(datum*energyBarScale));
                 energySeries.appendData(new DataPoint(energySeries.isEmpty() ? 0f :
-                        energySeries.getHighestValueX() + 0.5f, datum), true, energyDataWindowSize);
+                        energySeries.getHighestValueX() + 0.5f, datum), true, countDownSeconds*2);
             }
         });
         energyData.add(datum);
