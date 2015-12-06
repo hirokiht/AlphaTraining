@@ -105,10 +105,10 @@ public class DeviceSelectFragment extends Fragment{
                 public View getView(int position, View convertView, ViewGroup parent) {
                     if(convertView != null)
                         return convertView;
-                    TextView textView = (TextView) super.getView(position, convertView, parent);
+                    TextView textView = (TextView) super.getView(position, null, parent);
                     final BluetoothDevice device = getItem(position);
                     textView.setText(device.getName() == null ? device.getAddress() :
-                            device.getName() + "(" + device.getAddress() + ")");
+                            device.getName() + " (" + device.getAddress() + ")");
                     return textView;
                 }
             };
@@ -127,7 +127,7 @@ public class DeviceSelectFragment extends Fragment{
         super.onResume();
         if(mBluetoothAdapter == null){
             new AlertDialog.Builder(getContext()).setMessage(R.string.require_bt).
-                    setNeutralButton("OK", new DialogInterface.OnClickListener() {
+                    setNeutralButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             getActivity().finish();

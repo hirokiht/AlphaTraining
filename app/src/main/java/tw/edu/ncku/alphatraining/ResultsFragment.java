@@ -47,7 +47,7 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
                     count++;
             TextView textView = new TextView(parent.getContext(),null,android.R.attr.textAppearanceLarge);
             textView.setIncludeFontPadding(true);
-            textView.setText(dates.get(position)+" Alpha: "+count);
+            textView.setText(dates.get(position)+" "+parent.getResources().getString(R.string.alpha_legend)+": "+count);
             if(!((AbsListView)parent).isItemChecked(position))
                 return textView;
             GraphView graph = new GraphView(parent.getContext());
@@ -116,8 +116,10 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
             energyStr = energyStr.substring(1,energyStr.length()-1);
             String rawDataStr = Arrays.toString(rawData.get(i));
             rawDataStr = rawDataStr.substring(1,rawDataStr.length()-1);
-            String stringResult = "Timestamp,"+dates.get(i)+"\nBaseline,"+baseline
-                    +"\nEnergy Data,"+energyStr+"\nRaw Data,"+rawDataStr;
+            String stringResult = getString(R.string.timestamp)+","+dates.get(i)
+                    +"\n"+getString(R.string.baseline)+","+baseline
+                    +"\n"+getString(R.string.alpha_legend)+","+energyStr
+                    +"\n"+getString(R.string.raw_data)+","+rawDataStr;
             mListener.onResultSend(stringResult);
         }
     }

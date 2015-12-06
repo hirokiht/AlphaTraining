@@ -12,7 +12,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -29,7 +28,6 @@ import java.util.ArrayDeque;
 public class MainActivity extends AppCompatActivity
         implements InitFragment.OnInitFragmentInteractionListener, DeviceSelectFragment.OnDeviceSelectedListener,
         CaptureSessionFragment.SessionFragmentListener, ResultsFragment.OnResultSendListener{
-    private static final String TAG = "MainActivity";
     private final static InitFragment initFragment = new InitFragment();
     private final static CaptureSessionFragment sessionFrag = new CaptureSessionFragment();
     private final static Fragment deviceSelectFragment = new DeviceSelectFragment();
@@ -198,13 +196,13 @@ public class MainActivity extends AppCompatActivity
         fragmentManager.beginTransaction().replace(R.id.content_frame, sessionFrag).commit();
         adcManager.setBuffered12bitAdcNotification(false);
         ResultsFragment.setBaseline(avg * 1.5f);
-        Toast.makeText(MainActivity.this, "Baseline Energy: "+ ResultsFragment.getBaseline(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(MainActivity.this, getString(R.string.baseline_legend)+": "+
+                ResultsFragment.getBaseline(), Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onDeviceSelected(BluetoothDevice device) {
-        progressDialog = ProgressDialog.show(this, "Please Wait","Connecting...");
-        Log.d(TAG, "Device Selected: " + device);
+        progressDialog = ProgressDialog.show(this, getString(R.string.wait),getString(R.string.connecting));
         navigationView.setCheckedItem(R.id.nav_init);
         fragmentManager.beginTransaction().replace(R.id.content_frame,
                 ResultsFragment.getBaseline()==0f? initFragment : sessionFrag).commit();
@@ -251,7 +249,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onSessionStop() {
         adcManager.setBuffered12bitAdcNotification(false);
-        Log.d(TAG,"Session Stopped!");
     }
 
     @Override
@@ -267,6 +264,6 @@ public class MainActivity extends AppCompatActivity
         Intent resultIntent = new Intent(Intent.ACTION_SEND);
         resultIntent.putExtra(Intent.EXTRA_TEXT,result);
         resultIntent.setType("text/csv");
-        startActivity(Intent.createChooser(resultIntent, "Attach Result"));
+        startActivity(Intent.createChooser(resultIntent, getString(R.string.sendResult)));
     }
 }

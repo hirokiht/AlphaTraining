@@ -4,6 +4,10 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
+    <string name="wait">Please Wait</string>
+    <string name="connecting">Connecting…</string>
+    <string name="ok">OK</string>
+
     <string name="start">Start</string>
     <string name="reset">Reset</string>
     <string name="stop">Stop</string>
@@ -11,13 +15,16 @@
     <string name="baseline_legend">Baseline Energy</string>
     <string name="alpha_legend">Alpha Energy</string>
 
-    <string name="baseline_display">Baseline: </string>
+    <string name="timestamp">Timestamp</string>
+    <string name="raw_data">Raw Data</string>
+    <string name="baseline">Baseline</string>
 
     <string name="require_bt">This app requires Bluetooth to work!</string>
-    <string name="select_device">Select device to connect.</string>
+    <string name="select_device">Select device to connect</string>
     <string name="turn_on_bt">Turn On Bluetooth</string>
     <string name="select_bt">Confirm</string>
     <string name="getBaseline">Acquire Baseline</string>
     <string name="startSession">Start Capture</string>
     <string name="getResult">Results</string>
+    <string name="sendResult">Send Result</string>
 </resources>
