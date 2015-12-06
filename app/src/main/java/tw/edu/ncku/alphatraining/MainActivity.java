@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity
     private static boolean waitingPermission = false;
     private final static ArrayDeque<Float> queue = new ArrayDeque<>(32);
     public final static short SAMPLING_PERIOD = 1000/32;   //sample at 32Hz, sampling period is ms resolution
-    private final static int BEGIN_FREQ = 8, END_FREQ = 12;
+    private static int BEGIN_FREQ, END_FREQ;
     private final static float alpha = 0.54f, beta = 0.46f;    //parameters for hamming window
     private final static float[] windowFunction = new float[32];
 
@@ -57,6 +57,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        BEGIN_FREQ = getResources().getInteger(R.integer.begin_freq);
+        END_FREQ = getResources().getInteger(R.integer.end_freq);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -77,11 +79,11 @@ public class MainActivity extends AppCompatActivity
                 final int id = item.getItemId();
                 if (id == R.id.nav_init) {
                     fragmentManager.beginTransaction().replace(R.id.content_frame, initFragment).commit();
-                }else if (id == R.id.nav_capture) {
+                } else if (id == R.id.nav_capture) {
                     fragmentManager.beginTransaction().replace(R.id.content_frame, sessionFrag).commit();
-                }else if (id == R.id.nav_result) {
+                } else if (id == R.id.nav_result) {
                     fragmentManager.beginTransaction().replace(R.id.content_frame, resultFragment).commit();
-                }else return false;
+                } else return false;
                 drawer.closeDrawer(GravityCompat.START);
                 return true;
             }

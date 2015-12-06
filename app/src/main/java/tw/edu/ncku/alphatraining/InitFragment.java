@@ -33,9 +33,9 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
     private LineGraphSeries<DataPoint> rawDataSeries = new LineGraphSeries<>();
     private int dataSize = 0;   //used to count avg
     private float totalEnergy = 0f;
-    private static final int rawDataWindowSize =10 * 1000 / MainActivity.SAMPLING_PERIOD;
+    private static int rawDataWindowSize;
 
-    private final static int countDownSeconds = 120;
+    private static int countDownSeconds;
 
     private OnInitFragmentInteractionListener mListener;
 
@@ -71,6 +71,8 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        countDownSeconds = getResources().getInteger(R.integer.init_period);
+        rawDataWindowSize = getResources().getInteger(R.integer.raw_data_window) * 1000 / MainActivity.SAMPLING_PERIOD;
         if (context instanceof OnInitFragmentInteractionListener) {
             mListener = (OnInitFragmentInteractionListener) context;
         } else {

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="begin_freq">8</integer>
+    <integer name="end_freq">12</integer>
+
+    <integer name="raw_data_window">10</integer>
+    <integer name="init_period">120</integer>
+
+    <integer name="session_period">360</integer>
+</resources>

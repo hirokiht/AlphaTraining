@@ -40,7 +40,7 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
 
     private final Handler handler = new Handler();
     private static CountDownTimer timer;
-    private final static int countDownSeconds = 6*60;
+    private static int countDownSeconds;
     private static final int energyBarScale = 10000;
 
     private TextView timeText;
@@ -48,8 +48,8 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
     private ProgressBar energyBar;
     private Runnable task;
     private LineGraphSeries<DataPoint> energySeries = new LineGraphSeries<>();
-    private ArrayList<Float> energyData = new ArrayList<>(countDownSeconds*2);
-    private FloatBuffer rawData = FloatBuffer.allocate(countDownSeconds*1000/MainActivity.SAMPLING_PERIOD);
+    private ArrayList<Float> energyData;
+    private FloatBuffer rawData;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -95,6 +95,9 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        countDownSeconds = getResources().getInteger(R.integer.session_period);
+        energyData = new ArrayList<>(countDownSeconds*2);
+        rawData = FloatBuffer.allocate(countDownSeconds*1000/MainActivity.SAMPLING_PERIOD);
         if (context instanceof SessionFragmentListener) {
             mListener = (SessionFragmentListener) context;
         } else {
