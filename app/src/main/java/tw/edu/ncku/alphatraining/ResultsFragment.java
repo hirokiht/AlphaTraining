@@ -126,6 +126,10 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
             throw new RuntimeException(context.toString()
                     + " must implement OnResultSendListener");
         }
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState){
         ((MainActivity)getActivity()).navigationView.setCheckedItem(R.id.nav_result);
         //noinspection ConstantConditions
         ((MainActivity)getActivity()).getSupportActionBar().setTitle(R.string.getResult);

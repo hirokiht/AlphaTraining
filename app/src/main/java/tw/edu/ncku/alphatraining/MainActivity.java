@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -39,7 +40,7 @@ public class MainActivity extends AppCompatActivity
     private  DrawerLayout drawer;
     protected NavigationView navigationView;
     private ActionBarDrawerToggle toggle;
-    private ProgressDialog progressDialog = null;
+    private static ProgressDialog progressDialog = null;
     private static boolean waitingPermission = false;
     private final static ArrayDeque<Float> queue = new ArrayDeque<>(32);
     public final static short SAMPLING_PERIOD = 1000/32;   //sample at 32Hz, sampling period is ms resolution
@@ -54,47 +55,7 @@ public class MainActivity extends AppCompatActivity
                 windowFunction[i] = alpha-beta*(float)Math.cos(2*Math.PI*i/(windowFunction.length-1));
     }
 
-    private final AdcManager adcManager = new AdcManager(this, new AdcManager.AdcListener() {
-        @Override
-        public void onConnectionStateChange(int newState) {
-            if(newState == BluetoothProfile.STATE_CONNECTED){
-                if(progressDialog != null)
-                    progressDialog.dismiss();
-                adcManager.saveSamplingPeriod(SAMPLING_PERIOD);
-            }
-        }
-
-        @Override
-        public void onSamplingPeriodChanged(short sampling_period) {
-
-        }
-
-        @Override
-        public void onDataReceived(short data) {
-
-        }
-
-        @Override
-        public void onDataBufferReceived(byte[] buffer) {
-
-        }
-
-        @Override
-        public void onDataBufferReceived(short[] buffer) {
-            float[] data = new float[buffer.length];
-            for(int i = 0 ; i < data.length ; i++)
-                data[i] = (float)buffer[i]/2048f;
-            if(initFragment.isAdded())
-                initFragment.appendRawData(data);
-            else if(sessionFrag.isAdded())
-                sessionFrag.appendRawData(data);
-            for(float d : data)
-                queue.push(d);
-            if(queue.size() >= 32){
-                processQueue();
-            }
-        }
-    });
+    private static AdcManager adcManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,6 +89,48 @@ public class MainActivity extends AppCompatActivity
                 return true;
             }
         });
+        if(adcManager == null)
+            adcManager = new AdcManager(getApplicationContext(), new AdcManager.AdcListener() {
+                @Override
+                public void onConnectionStateChange(int newState) {
+                    if(newState == BluetoothProfile.STATE_CONNECTED){
+                        if(progressDialog != null)
+                            progressDialog.dismiss();
+                        adcManager.saveSamplingPeriod(SAMPLING_PERIOD);
+                    }
+                }
+
+                @Override
+                public void onSamplingPeriodChanged(short sampling_period) {
+
+                }
+
+                @Override
+                public void onDataReceived(short data) {
+
+                }
+
+                @Override
+                public void onDataBufferReceived(byte[] buffer) {
+
+                }
+
+                @Override
+                public void onDataBufferReceived(short[] buffer) {
+                    float[] data = new float[buffer.length];
+                    for(int i = 0 ; i < data.length ; i++)
+                        data[i] = (float)buffer[i]/2048f;
+                    if(initFragment.isAdded())
+                        initFragment.appendRawData(data);
+                    else if(sessionFrag.isAdded())
+                        sessionFrag.appendRawData(data);
+                    for(float d : data)
+                        queue.push(d);
+                    if(queue.size() >= 32){
+                        processQueue();
+                    }
+                }
+            });
     }
 
     @Override
@@ -141,8 +144,12 @@ public class MainActivity extends AppCompatActivity
             finish();
         else if(adcManager.getDevice() == null)
             startDeviceSelect();
-        else fragmentManager.beginTransaction().replace(R.id.content_frame,
+        else{
+            drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+            toggle.setDrawerIndicatorEnabled(true);
+            fragmentManager.beginTransaction().replace(R.id.content_frame,
                     ResultsFragment.getBaseline()==0f? initFragment : sessionFrag).commit();
+        }
     }
 
     @Override
@@ -207,7 +214,7 @@ public class MainActivity extends AppCompatActivity
         toggle.setDrawerIndicatorEnabled(false);
     }
 
-    private void processQueue(){
+    private static void processQueue(){
         float[] data = new float[queue.size()];
         Float[] qData = queue.toArray(new Float[data.length]);
         for(int i = 0 ; i < data.length ; i++)

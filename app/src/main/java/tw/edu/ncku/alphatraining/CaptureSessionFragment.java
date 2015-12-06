@@ -103,9 +103,15 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
                     + " must implement SessionFragmentListener");
         }
         energySeries.setTitle(getString(R.string.alpha_legend));
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState){
+        super.onActivityCreated(savedInstanceState);
         ((MainActivity)getActivity()).navigationView.setCheckedItem(R.id.nav_capture);
         //noinspection ConstantConditions
         ((MainActivity)getActivity()).getSupportActionBar().setTitle(R.string.startSession);
+        setRetainInstance(true);
     }
 
     @Override
@@ -116,7 +122,7 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        if(isChecked) {
+        if(isChecked && timer == null) {
             timer = new CountDownTimer(countDownSeconds*1000,1000) {
                 @Override
                 public void onTick(long millisUntilFinished) {
@@ -147,7 +153,7 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
                     energySeries.resetData(new DataPoint[]{});
                 }
             });
-        }else{
+        }else if(!isChecked){
             if(timer == null) {
                 float[] data = new float[energyData.size()];
                 for(int i = 0 ; i < data.length ; i++)

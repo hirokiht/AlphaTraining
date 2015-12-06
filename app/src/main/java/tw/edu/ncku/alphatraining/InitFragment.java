@@ -77,9 +77,15 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
             throw new RuntimeException(context.toString()
                     + " must implement OnInitFragmentInteractionListener");
         }
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState){
+        super.onActivityCreated(savedInstanceState);
         ((MainActivity)getActivity()).navigationView.setCheckedItem(R.id.nav_init);
         //noinspection ConstantConditions
         ((MainActivity)getActivity()).getSupportActionBar().setTitle(R.string.getBaseline);
+        setRetainInstance(true);
     }
 
     @Override
@@ -90,7 +96,7 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        if(isChecked) {
+        if(isChecked && timer == null) {
             timer = new CountDownTimer(timeProgress.getMax()*1000,1000) {
                 @Override
                 public void onTick(long millisUntilFinished) {
@@ -115,7 +121,7 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
             };
             timer.start();
             mListener.onInitStart();
-        }else{
+        }else if(!isChecked){
             if(timeProgress.getProgress() == 0)
                 mListener.onInitFinish(totalEnergy/dataSize);
             else mListener.onInitCancel();
