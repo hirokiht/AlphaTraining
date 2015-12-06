@@ -147,9 +147,11 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    rawDataSeries.appendData(new DataPoint(rawDataSeries.isEmpty() ? 0f :
+                    if(rawDataSeries.getHighestValueX() < 0f)
+                        rawDataSeries.resetData(new DataPoint[]{new DataPoint(0f,datum*100)});
+                    else rawDataSeries.appendData(new DataPoint(rawDataSeries.isEmpty() ? 0f :
                             rawDataSeries.getHighestValueX() + MainActivity.SAMPLING_PERIOD / 1000f, datum * 100), true, rawDataWindowSize);
-                    graphView.getViewport().setMinX(0f);
+                    graphView.getViewport().setMinX(rawDataSeries.getLowestValueX());
                     graphView.getViewport().setMaxX(rawDataSeries.getHighestValueX());
                 }
             });
@@ -161,9 +163,11 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
                 @Override
                 public void run() {
                     for(final double datum : data)
-                        rawDataSeries.appendData(new DataPoint(rawDataSeries.isEmpty() ? 0f :
-                            rawDataSeries.getHighestValueX() + MainActivity.SAMPLING_PERIOD/1000f, datum*100), true, rawDataWindowSize);
-                    graphView.getViewport().setMinX(0f);
+                        if(rawDataSeries.getHighestValueX() < 0f)
+                            rawDataSeries.resetData(new DataPoint[]{new DataPoint(0f,datum*100)});
+                        else rawDataSeries.appendData(new DataPoint(rawDataSeries.isEmpty() ? 0f :
+                                rawDataSeries.getHighestValueX() + MainActivity.SAMPLING_PERIOD / 1000f, datum * 100), true, rawDataWindowSize);
+                    graphView.getViewport().setMinX(rawDataSeries.getLowestValueX());
                     graphView.getViewport().setMaxX(rawDataSeries.getHighestValueX());
                 }
             });
