@@ -1,5 +1,6 @@
 package tw.edu.ncku.alphatraining;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -7,8 +8,12 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ExpandableListView;
-import android.widget.TextView;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
+
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -17,9 +22,9 @@ import android.widget.TextView;
  * to handle interaction events.
  */
 public class ResultsFragment extends Fragment implements View.OnClickListener{
-    private float baseline = 0f;
-    private TextView baselineText;
-    private ExpandableListView resultList;
+    private static float baseline = 0f;
+    private AbsListView resultList;
+    private final static ResultListAdapter<String> listAdapter = new ResultListAdapter<>();
 
     private OnResultSendListener mListener;
 
@@ -33,16 +38,27 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_results, container, false);
-        FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.sendActionBtn);
-        baselineText = (TextView) view.findViewById(R.id.baselineText);
-        resultList = (ExpandableListView) view.findViewById(R.id.resultList);
+        final FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.sendActionBtn);
+        resultList = (AbsListView) view.findViewById(R.id.resultList);
         fab.setOnClickListener(this);
+        resultList.setAdapter(listAdapter);
+        resultList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                ((AbsListView) parent).setItemChecked(position, true);
+            }
+        });
         return view;
     }
 
     public void onClick(View view) {
         if (mListener != null) {
-            mListener.onResultSend("");
+            String key = listAdapter.getKey(resultList.getCheckedItemPosition());
+            float[] result = listAdapter.getItem(resultList.getCheckedItemPosition());
+            String stringResult = Arrays.toString(result).substring(1);
+            stringResult = stringResult.substring(0,stringResult.length()-1);
+            stringResult = "Timestamp,"+key+"\nBaseline,"+baseline+"\nEnergy Data,"+stringResult;
+            mListener.onResultSend(stringResult);
         }
     }
 
@@ -66,16 +82,17 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
         mListener = null;
     }
 
-    public float getBaseline(){
+    public static float getBaseline(){
         return baseline;
     }
 
-    public void setBaseline(float baseline){
-        this.baseline = baseline;
+    public static void setBaseline(float baseline){
+        ResultsFragment.baseline = baseline;
     }
 
+    @SuppressLint("SimpleDateFormat")
     public void appendResult(float[] result){
-
+        listAdapter.appendResult(new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()),result);
     }
 
     /**

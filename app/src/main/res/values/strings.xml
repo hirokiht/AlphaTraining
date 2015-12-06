@@ -8,6 +8,9 @@
     <string name="reset">Reset</string>
     <string name="stop">Stop</string>
 
+    <string name="baseline_legend">Baseline Energy</string>
+    <string name="alpha_legend">Alpha Energy</string>
+
     <string name="baseline_display">Baseline: </string>
 
     <string name="require_bt">This app requires Bluetooth to work!</string>
