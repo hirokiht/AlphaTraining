@@ -2,14 +2,22 @@ package tw.edu.ncku.alphatraining;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.SimpleArrayMap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.TextView;
+
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.LegendRenderer;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -24,7 +32,52 @@ import java.util.Date;
 public class ResultsFragment extends Fragment implements View.OnClickListener{
     private static float baseline = 0f;
     private AbsListView resultList;
-    private final static ResultListAdapter<String> listAdapter = new ResultListAdapter<>();
+    private static final SimpleArrayMap<String,float[]> rawDataMap = new SimpleArrayMap<>();
+    private static final ResultListAdapter<float[]> listAdapter = new ResultListAdapter<float[]>() {
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            int count = 0;
+            float[] data = listAdapter.getItem(position);
+            for(int i = 1 ; data.length > 1 && i < data.length ; i++)
+                if(data[i] >= baseline && data[i-1] < baseline)
+                    count++;
+            TextView textView = new TextView(parent.getContext(),null,android.R.attr.textAppearanceLarge);
+            textView.setIncludeFontPadding(true);
+            textView.setText(rawDataMap.keyAt(position)+" Alpha: "+count);
+            if(!((AbsListView)parent).isItemChecked(position))
+                return textView;
+            GraphView graph = new GraphView(parent.getContext());
+            graph.setTitle(textView.getText().toString());
+            graph.setTitleTextSize(textView.getTextSize());
+            graph.getViewport().setXAxisBoundsManual(true);
+            LineGraphSeries<DataPoint> dataSeries = new LineGraphSeries<>();
+            float[] values = list.get(position);
+            for(int i = 0 ; i < values.length ; i++)
+                dataSeries.appendData(new DataPoint(i/2f,values[i]), false, values.length);
+            LineGraphSeries<DataPoint> baselineSeries = new LineGraphSeries<>(
+                    new DataPoint[]{new DataPoint(0f,ResultsFragment.getBaseline()),
+                            new DataPoint(dataSeries.getHighestValueX(),ResultsFragment.getBaseline())});
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                dataSeries.setColor(parent.getResources().getColor(R.color.colorPrimary,null));
+                baselineSeries.setColor(parent.getResources().getColor(R.color.colorAccent,null));
+            }else{
+                //noinspection deprecation
+                dataSeries.setColor(parent.getResources().getColor(R.color.colorPrimary));
+                //noinspection deprecation
+                baselineSeries.setColor(parent.getResources().getColor(R.color.colorAccent));
+            }
+            dataSeries.setTitle(parent.getContext().getString(R.string.alpha_legend));
+            baselineSeries.setTitle(parent.getContext().getString(R.string.baseline_legend));
+            graph.addSeries(dataSeries);
+            graph.addSeries(baselineSeries);
+            graph.getLegendRenderer().setVisible(true);
+            graph.getLegendRenderer().setAlign(LegendRenderer.LegendAlign.TOP);
+            graph.getViewport().setMinX(dataSeries.getLowestValueX());
+            graph.getViewport().setMaxX(dataSeries.getHighestValueX());
+            graph.setMinimumHeight(parent.getWidth() / 2);
+            return graph;
+        }
+    };
 
     private OnResultSendListener mListener;
 
@@ -53,11 +106,13 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
 
     public void onClick(View view) {
         if (mListener != null) {
-            String key = listAdapter.getKey(resultList.getCheckedItemPosition());
-            float[] result = listAdapter.getItem(resultList.getCheckedItemPosition());
-            String stringResult = Arrays.toString(result).substring(1);
-            stringResult = stringResult.substring(0,stringResult.length()-1);
-            stringResult = "Timestamp,"+key+"\nBaseline,"+baseline+"\nEnergy Data,"+stringResult;
+            final int i = resultList.getCheckedItemPosition();
+            String energyStr = Arrays.toString(listAdapter.getItem(i));
+            energyStr = energyStr.substring(1,energyStr.length()-1);
+            String rawDataStr = Arrays.toString(rawDataMap.valueAt(i));
+            rawDataStr = rawDataStr.substring(1,rawDataStr.length()-1);
+            String stringResult = "Timestamp,"+rawDataMap.keyAt(i)+"\nBaseline,"+baseline
+                    +"\nEnergy Data,"+energyStr+"\nRaw Data,"+rawDataStr;
             mListener.onResultSend(stringResult);
         }
     }
@@ -91,8 +146,9 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
     }
 
     @SuppressLint("SimpleDateFormat")
-    public void appendResult(float[] result){
-        listAdapter.appendResult(new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()),result);
+    public void appendResult(float[] rawData, float[] result){
+        rawDataMap.put(new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()), rawData);
+        listAdapter.appendResult(result);
     }
 
     /**

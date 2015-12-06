@@ -85,6 +85,8 @@ public class MainActivity extends AppCompatActivity
                 data[i] = (float)buffer[i]/2048f;
             if(initFragment.isAdded())
                 initFragment.appendRawData(data);
+            else if(sessionFrag.isAdded())
+                sessionFrag.appendRawData(data);
             for(float d : data)
                 queue.push(d);
             if(queue.size() >= 32){
@@ -182,7 +184,7 @@ public class MainActivity extends AppCompatActivity
         navigationView.setCheckedItem(R.id.nav_capture);
         fragmentManager.beginTransaction().replace(R.id.content_frame, sessionFrag).commit();
         adcManager.setBuffered12bitAdcNotification(false);
-        ResultsFragment.setBaseline(avg*1.5f);
+        ResultsFragment.setBaseline(avg * 1.5f);
         Toast.makeText(MainActivity.this, "Baseline Energy: "+ ResultsFragment.getBaseline(), Toast.LENGTH_SHORT).show();
     }
 
@@ -240,9 +242,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onSessionFinish(@NonNull float[] data) {
+    public void onSessionFinish(@NonNull float[] rawData, @NonNull float[] energyData){
         adcManager.setBuffered12bitAdcNotification(false);
-        resultFragment.appendResult(data);
+        resultFragment.appendResult(rawData, energyData);
         fragmentManager.beginTransaction().replace(R.id.content_frame, resultFragment).commit();
         navigationView.getMenu().findItem(R.id.nav_result).setEnabled(true);
     }

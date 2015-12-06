@@ -24,6 +24,7 @@ import com.jjoe64.graphview.LegendRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
 
@@ -49,6 +50,7 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
     private Runnable task;
     private LineGraphSeries<DataPoint> energySeries = new LineGraphSeries<>();
     private ArrayList<Float> energyData = new ArrayList<>(countDownSeconds*2);
+    private FloatBuffer rawData = FloatBuffer.allocate(countDownSeconds*1000/MainActivity.SAMPLING_PERIOD);
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -137,6 +139,7 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
             };
             timer.start();
             mListener.onSessionStart();
+            rawData.clear();
             energyData.clear();
             handler.post(task = new Runnable() {
                 @Override
@@ -149,13 +152,25 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
                 float[] data = new float[energyData.size()];
                 for(int i = 0 ; i < data.length ; i++)
                     data[i] = energyData.get(i);
-                mListener.onSessionFinish(data);
+                mListener.onSessionFinish(rawData.array().clone(),data);
             }else{
                 mListener.onSessionStop();
                 timer.cancel();
             }
             timeText.setText(countDownSeconds/60+":"+String.format("%02d",countDownSeconds%60));
         }
+    }
+
+    public void appendRawData(final float data){
+        if(timer == null)
+            return;
+        rawData.put(data);
+    }
+
+    public void appendRawData(final float[] data){
+        if(timer == null)
+            return;
+        rawData.put(data);
     }
 
     public void appendEnergyData(final float datum){
@@ -200,6 +215,6 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
     public interface SessionFragmentListener {
         void onSessionStart();
         void onSessionStop();
-        void onSessionFinish(@NonNull float[] data);
+        void onSessionFinish(@NonNull float[] rawData, @NonNull float[] energyData);
     }
 }
