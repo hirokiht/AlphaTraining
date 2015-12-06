@@ -119,6 +119,9 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
                     theButton.setChecked(false);
                 }
             };
+            totalEnergy = 0f;
+            dataSize = 0;
+            rawDataSeries.resetData(new DataPoint[]{new DataPoint(-1f,0f)});
             timer.start();
             mListener.onInitStart();
         }else if(!isChecked){
@@ -145,8 +148,8 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
                 @Override
                 public void run() {
                     rawDataSeries.appendData(new DataPoint(rawDataSeries.isEmpty() ? 0f :
-                            rawDataSeries.getHighestValueX() + 0.5f, datum*100), true, rawDataWindowSize);
-                    graphView.getViewport().setMinX(rawDataSeries.getLowestValueX());
+                            rawDataSeries.getHighestValueX() + MainActivity.SAMPLING_PERIOD / 1000f, datum * 100), true, rawDataWindowSize);
+                    graphView.getViewport().setMinX(0f);
                     graphView.getViewport().setMaxX(rawDataSeries.getHighestValueX());
                 }
             });
@@ -159,22 +162,11 @@ public class InitFragment extends Fragment implements CompoundButton.OnCheckedCh
                 public void run() {
                     for(final double datum : data)
                         rawDataSeries.appendData(new DataPoint(rawDataSeries.isEmpty() ? 0f :
-                            rawDataSeries.getHighestValueX() + 0.5f, datum*100), true, rawDataWindowSize);
-                    graphView.getViewport().setMinX(rawDataSeries.getLowestValueX());
+                            rawDataSeries.getHighestValueX() + MainActivity.SAMPLING_PERIOD/1000f, datum*100), true, rawDataWindowSize);
+                    graphView.getViewport().setMinX(0f);
                     graphView.getViewport().setMaxX(rawDataSeries.getHighestValueX());
                 }
             });
-    }
-
-    public void resetData(){
-        totalEnergy = 0f;
-        dataSize = 0;
-        handler.post(task = new Runnable() {
-            @Override
-            public void run() {
-                rawDataSeries.resetData(new DataPoint[]{});
-            }
-        });
     }
 
     public interface OnInitFragmentInteractionListener {

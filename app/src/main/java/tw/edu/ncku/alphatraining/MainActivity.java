@@ -183,7 +183,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onInitStart() {
         queue.clear();
-        initFragment.resetData();
         adcManager.setBuffered12bitAdcNotification(true);
     }
 
