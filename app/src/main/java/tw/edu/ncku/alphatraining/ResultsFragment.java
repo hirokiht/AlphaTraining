@@ -6,7 +6,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
-import android.support.v4.util.SimpleArrayMap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +18,9 @@ import com.jjoe64.graphview.LegendRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -32,7 +33,10 @@ import java.util.Date;
 public class ResultsFragment extends Fragment implements View.OnClickListener{
     private static float baseline = 0f;
     private AbsListView resultList;
-    private static final SimpleArrayMap<String,float[]> rawDataMap = new SimpleArrayMap<>();
+    @SuppressLint("SimpleDateFormat")
+    private static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    private static final ArrayList<String> dates = new ArrayList<>();
+    private static final ArrayList<float[]> rawData = new ArrayList<>();
     private static final ResultListAdapter<float[]> listAdapter = new ResultListAdapter<float[]>() {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
@@ -43,7 +47,7 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
                     count++;
             TextView textView = new TextView(parent.getContext(),null,android.R.attr.textAppearanceLarge);
             textView.setIncludeFontPadding(true);
-            textView.setText(rawDataMap.keyAt(position)+" Alpha: "+count);
+            textView.setText(dates.get(position)+" Alpha: "+count);
             if(!((AbsListView)parent).isItemChecked(position))
                 return textView;
             GraphView graph = new GraphView(parent.getContext());
@@ -109,9 +113,9 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
             final int i = resultList.getCheckedItemPosition();
             String energyStr = Arrays.toString(listAdapter.getItem(i));
             energyStr = energyStr.substring(1,energyStr.length()-1);
-            String rawDataStr = Arrays.toString(rawDataMap.valueAt(i));
+            String rawDataStr = Arrays.toString(rawData.get(i));
             rawDataStr = rawDataStr.substring(1,rawDataStr.length()-1);
-            String stringResult = "Timestamp,"+rawDataMap.keyAt(i)+"\nBaseline,"+baseline
+            String stringResult = "Timestamp,"+dates.get(i)+"\nBaseline,"+baseline
                     +"\nEnergy Data,"+energyStr+"\nRaw Data,"+rawDataStr;
             mListener.onResultSend(stringResult);
         }
@@ -130,6 +134,7 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState){
+        super.onActivityCreated(savedInstanceState);
         ((MainActivity)getActivity()).navigationView.setCheckedItem(R.id.nav_result);
         //noinspection ConstantConditions
         ((MainActivity)getActivity()).getSupportActionBar().setTitle(R.string.getResult);
@@ -141,6 +146,10 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
         mListener = null;
     }
 
+    public static boolean isEmpty(){
+        return rawData.isEmpty();
+    }
+
     public static float getBaseline(){
         return baseline;
     }
@@ -149,9 +158,9 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
         ResultsFragment.baseline = baseline;
     }
 
-    @SuppressLint("SimpleDateFormat")
-    public void appendResult(float[] rawData, float[] result){
-        rawDataMap.put(new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()), rawData);
+    public static void appendResult(float[] data, float[] result){
+        dates.add(dateFormat.format(new Date()));
+        rawData.add(data);
         listAdapter.appendResult(result);
     }
 

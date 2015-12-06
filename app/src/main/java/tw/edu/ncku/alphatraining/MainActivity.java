@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -148,13 +147,20 @@ public class MainActivity extends AppCompatActivity
             drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
             toggle.setDrawerIndicatorEnabled(true);
             fragmentManager.beginTransaction().replace(R.id.content_frame,
-                    ResultsFragment.getBaseline()==0f? initFragment : sessionFrag).commit();
+                    ResultsFragment.getBaseline() == 0f ? initFragment :
+                            ResultsFragment.isEmpty() ? sessionFrag : resultFragment).commit();
+            if(ResultsFragment.getBaseline() != 0f)
+                navigationView.getMenu().findItem(R.id.nav_capture).setEnabled(true);
+            if(!ResultsFragment.isEmpty())
+                navigationView.getMenu().findItem(R.id.nav_result).setEnabled(true);
         }
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState){
-        super.onSaveInstanceState(outState);
+    protected void onDestroy(){
+        if(progressDialog != null)
+            progressDialog.dismiss();
+        super.onDestroy();
     }
 
     @Override
@@ -252,7 +258,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onSessionFinish(@NonNull float[] rawData, @NonNull float[] energyData){
         adcManager.setBuffered12bitAdcNotification(false);
-        resultFragment.appendResult(rawData, energyData);
+        ResultsFragment.appendResult(rawData, energyData);
         fragmentManager.beginTransaction().replace(R.id.content_frame, resultFragment).commit();
         navigationView.getMenu().findItem(R.id.nav_result).setEnabled(true);
     }
