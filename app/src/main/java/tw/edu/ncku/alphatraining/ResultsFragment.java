@@ -34,7 +34,7 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
     private static float baseline = 0f;
     private AbsListView resultList;
     private static DateFormat dateFormat;
-    private static final ArrayList<String> dates = new ArrayList<>();
+    private static final ArrayList<Date> dates = new ArrayList<>();
     private static final ArrayList<float[]> rawData = new ArrayList<>();
     private static final ResultListAdapter<float[]> listAdapter = new ResultListAdapter<float[]>() {
         @Override
@@ -46,7 +46,7 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
                     count++;
             TextView textView = new TextView(parent.getContext(),null,android.R.attr.textAppearanceLarge);
             textView.setIncludeFontPadding(true);
-            textView.setText(dates.get(position)+" "+parent.getResources().getString(R.string.alpha_legend)+": "+count);
+            textView.setText(dateFormat.format(dates.get(position))+" "+parent.getResources().getString(R.string.alpha_legend)+": "+count);
             if(!((AbsListView)parent).isItemChecked(position))
                 return textView;
             GraphView graph = new GraphView(parent.getContext());
@@ -115,7 +115,7 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
             energyStr = energyStr.substring(1,energyStr.length()-1);
             String rawDataStr = Arrays.toString(rawData.get(i));
             rawDataStr = rawDataStr.substring(1,rawDataStr.length()-1);
-            String stringResult = getString(R.string.timestamp)+","+dates.get(i)
+            String stringResult = getString(R.string.timestamp)+","+dateFormat.format(dates.get(i))
                     +"\n"+getString(R.string.baseline)+","+baseline
                     +"\n"+getString(R.string.alpha_legend)+","+energyStr
                     +"\n"+getString(R.string.raw_data)+","+rawDataStr;
@@ -163,7 +163,7 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
     }
 
     public static void appendResult(float[] data, float[] result){
-        dates.add(dateFormat.format(new Date()));
+        dates.add(new Date());
         rawData.add(data);
         listAdapter.appendResult(result);
     }
