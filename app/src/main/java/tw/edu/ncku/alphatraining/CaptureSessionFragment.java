@@ -59,7 +59,7 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
         timeText = (TextView) view.findViewById(R.id.timeText);
         theButton = (ToggleButton) view.findViewById(R.id.theButton);
         energyBar = (ProgressBar) view.findViewById(R.id.energyBar);
-        energyBar.setMax((int)(ResultsFragment.getBaseline()*energyBarScale));
+        energyBar.setMax((int)container.getResources().getFraction(R.fraction.max_energy,energyBarScale,1));
         GraphView energyGraph = (GraphView) view.findViewById(R.id.energyGraph);
         timeText.setText(countDownSeconds / 60 + ":" + String.format("%02d", countDownSeconds % 60));
         theButton.setOnCheckedChangeListener(this);
@@ -81,6 +81,9 @@ public class CaptureSessionFragment extends Fragment implements CompoundButton.O
         energyGraph.getViewport().setXAxisBoundsManual(true);
         energyGraph.getViewport().setMinX(0f);
         energyGraph.getViewport().setMaxX(countDownSeconds);
+        energyGraph.getViewport().setYAxisBoundsManual(true);
+        energyGraph.getViewport().setMinY(0f);
+        energyGraph.getViewport().setMaxY(container.getResources().getFraction(R.fraction.max_energy,1,1));
         energyGraph.getLegendRenderer().setVisible(true);
         energyGraph.getLegendRenderer().setAlign(LegendRenderer.LegendAlign.TOP);
         return view;
