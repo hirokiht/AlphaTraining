@@ -1,11 +1,13 @@
 package tw.edu.ncku.alphatraining;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -18,11 +20,15 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
 import org.jtransforms.fft.FloatFFT_1D;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayDeque;
 
 public class MainActivity extends AppCompatActivity
@@ -135,11 +141,16 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume(){
         super.onResume();
+    }
+
+    @Override
+    protected void onPostResume(){
+        super.onPostResume();
         if(waitingPermission)
             return;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED)
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED)
             finish();
         else if(adcManager.getDevice() == null)
             startDeviceSelect();
@@ -261,11 +272,25 @@ public class MainActivity extends AppCompatActivity
         navigationView.getMenu().findItem(R.id.nav_result).setEnabled(true);
     }
 
+    @SuppressLint("SetWorldReadable")
     @Override
     public void onResultSend(String result) {
+        File file = null;
+        try {
+            file = File.createTempFile("result", null);
+            FileWriter fileWriter = new FileWriter(file);
+            fileWriter.write(result);
+            fileWriter.close();
+        }catch(IOException ioe){
+            ioe.printStackTrace();
+            return;
+        }
+        if(!file.setReadable(true,false))
+            Log.d("onResultSend","Can't do setReadable on temp file!");
         Intent resultIntent = new Intent(Intent.ACTION_SEND);
-        resultIntent.putExtra(Intent.EXTRA_TEXT,result);
-        resultIntent.setType("text/csv");
+        resultIntent.putExtra(Intent.EXTRA_TEXT, result);
+        resultIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+        resultIntent.setType("*/*");
         startActivity(Intent.createChooser(resultIntent, getString(R.string.sendResult)));
     }
 }

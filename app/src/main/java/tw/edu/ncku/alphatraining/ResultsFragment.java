@@ -110,15 +110,17 @@ public class ResultsFragment extends Fragment implements View.OnClickListener{
 
     public void onClick(View view) {
         if (mListener != null) {
-            final int i = resultList.getCheckedItemPosition();
-            String energyStr = Arrays.toString(listAdapter.getItem(i));
-            energyStr = energyStr.substring(1,energyStr.length()-1);
-            String rawDataStr = Arrays.toString(rawData.get(i));
-            rawDataStr = rawDataStr.substring(1,rawDataStr.length()-1);
-            String stringResult = getString(R.string.timestamp)+","+dateFormat.format(dates.get(i))
-                    +"\n"+getString(R.string.baseline)+","+baseline
-                    +"\n"+getString(R.string.alpha_legend)+","+energyStr
-                    +"\n"+getString(R.string.raw_data)+","+rawDataStr;
+            String stringResult = "";
+            for(int i = 0 ; i < dates.size() ; i++) {
+                String energyStr = Arrays.toString(listAdapter.getItem(i));
+                energyStr = energyStr.substring(1, energyStr.length() - 1);
+                String rawDataStr = Arrays.toString(rawData.get(i));
+                rawDataStr = rawDataStr.substring(1, rawDataStr.length() - 1);
+                stringResult += getString(R.string.timestamp) + "," + dateFormat.format(dates.get(i))
+                        + "\n" + getString(R.string.baseline) + "," + baseline
+                        + "\n" + getString(R.string.alpha_legend) + "," + energyStr
+                        + "\n" + getString(R.string.raw_data) + "," + rawDataStr+"\n\n";
+            }
             mListener.onResultSend(stringResult);
         }
     }
